@@ -9,3 +9,4 @@ qtcreator-build
 *.backup
 *.user
 *.autosave
+.DS_Store
