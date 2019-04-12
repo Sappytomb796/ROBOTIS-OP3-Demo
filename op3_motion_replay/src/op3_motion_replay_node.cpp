@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "robotis_op3_motion_replay/op3_motion_replay.h"
+#include "op3_motion_replay/op3_motion_replay.h"
 
 int main(int argc, char **argv)
 {

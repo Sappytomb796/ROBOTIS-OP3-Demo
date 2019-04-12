@@ -1,4 +1,4 @@
-#include "robotis_op3_motion_replay/op3_motion_replay.h"
+#include "op3_motion_replay/op3_motion_replay.h"
 
 namespace robotis_op
 {
