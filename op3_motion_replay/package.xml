@@ -5,8 +5,15 @@
 	<name>op3_motion_replay</name>
 	<version>0.0.1</version>
 	<description>The op3_motion_replay package</description>
-	
+				
 	<license>BSD</license>
-	<maintainer>Jordan Miller and Brady Young</maintainer>
+	<maintainer email="jmm23@pdx.edu">Jordan Miller and Brady Young</maintainer>
 	
+	<buildtool_depend>catkin</buildtool_depend>
+	<depend>roscpp</depend>
+	<depend>std_msgs</depend>
+	<depend>sensor_msgs</depend>
+	<depend>robotis_controller_msgs</depend>
+	<exec_depend>op3_manager</exec_depend>
+
 </package>

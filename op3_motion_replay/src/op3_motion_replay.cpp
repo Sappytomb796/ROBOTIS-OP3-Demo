@@ -18,18 +18,18 @@ namespace robotis_op
 	
 	void jointCallback(const sensor_msgs::JointState::ConstPtr& msg)
 	{
-		if(msg.size() == 0)
+		if(msg->name.size() == 0)
 			return;
 		
-		int num_states = msg.size();
+		int num_states = msg->name.size();
 		
 		for(int i = 0; i < num_states; i++)
 		{
-			joint_angles_.insert(msg.name[i], msg.position[i]);
+			joint_angles_.insert(std::pair<std::string, double>(msg->name[i], msg->position[i]));
 			
 			// print for testing
 			// might need to convert position (pos * 180 / M_PI)
-			std::cout << msg.name[i] << " -> " << msg.position[i] << std::endl;
+			std::cout << msg->name[i] << " -> " << msg->position[i] << std::endl;
 		}
 	}
 	
