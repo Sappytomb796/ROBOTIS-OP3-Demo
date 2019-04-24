@@ -10,7 +10,8 @@ namespace robotis_op
 		: nh_(ros::this_node::getName()),
 		MODULE_NAME("op3_motion_replay")
 	{
-		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1, &MotionReplay::jointCallback, this);
+		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
+										&MotionReplay::jointCallback, this);
 		
 		joint_states_.clear();
 		
@@ -81,10 +82,12 @@ namespace robotis_op
 			return false;
 		}
 		
-		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin(); it != joint_states_.end(); ++it)
+		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin();
+			 it != joint_states_.end(); ++it)
 		{
-			for (std::vector<double>::const_iterator v = it->begin(); v != it->end(); ++v)
-				file << *v << '\t';
+			for (std::vector<double>::const_iterator pit = (*it).position.begin();
+				 pit != (*it).position.end(); ++pit)
+				file << *pit << '\t';
 		}
 		
 		// old method
@@ -144,7 +147,7 @@ namespace robotis_op
 				msg.position.push_back(atof(token.c_str()));
 			}
 			
-			joint_states.push_back(tmp);
+			joint_states.push_back(msg);
 			msg.clear();
 		}
 		
