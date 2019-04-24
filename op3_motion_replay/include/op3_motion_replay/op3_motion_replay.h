@@ -17,21 +17,25 @@ namespace robotis_op{
             const std::string MODULE_NAME;
 
             void jointCallback(const sensor_msgs::JointState::ConstPtr& msg);
-			
-			bool saveReplay(std::string replay_name);
-			bool loadReplay(std::string replay_name);
+	    void buttonCallback(const std_msgs::String::ConstPtr& msg);
+    
+	    bool saveReplay(std::string replay_name);
+	    bool loadReplay(std::string replay_name);
 
             ros::NodeHandle nh_;
             ros::Subscriber op3_joints_sub_;
-			
-			std::vector<sensor_msgs::JointState> joint_states_;
-			
-			/*
-			std::vector<std::string> joint_name_;
-			std::map<std::string, std::vector<double>> joint_position_;
-			std::map<std::string, std::vector<double>> joint_velocity_;
-			std::map<std::string, std::vector<double>> joint_effort_;
-			*/
+            ros::Subscriber button_sub_;		
+	    std::vector<sensor_msgs::JointState> joint_states_;
+    	    
+	    /*
+	    std::vector<std::string> joint_name_;
+	    std::map<std::string, std::vector<double>> joint_position_;
+	    std::map<std::string, std::vector<double>> joint_velocity_;
+	    std::map<std::string, std::vector<double>> joint_effort_;
+	    */
+            
+            bool record_flag;
+	    std::map<std::string, double> joint_angles_;
     };
 
 }
