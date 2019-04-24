@@ -57,10 +57,8 @@ namespace robotis_op
 			
 			// print for testing
 			// might need to convert position (pos * 180 / M_PI)
-			std::cout << msg->name[i] <<  std::endl;
-			std::cout << "position: " << msg->position[i] << std::endl;
-			std::cout << "velocity: " << msg->velocity[i] << std::endl;
-			std::cout << "effort: " << msg->effort[i] << std::endl;
+			ROS_INFO("%s\nposition: %f\nvelocity: %f\neffort: %f\n",
+					 msg->name[i].c_str(), msg->position[i], msg->velocity[i], msg->effort[i]);
 		}
 	}
 	
@@ -144,6 +142,7 @@ namespace robotis_op
 			while(getline(data, token, delimiter))
 			{
 				msg.position.push_back(atof(token.c_str()));
+				ROS_INFO("%s\n", token.c_str());
 			}
 			
 			joint_states.push_back(msg);
