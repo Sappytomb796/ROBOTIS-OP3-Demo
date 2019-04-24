@@ -46,7 +46,6 @@ namespace robotis_op
 			new_msg.effort.push_back(msg->effort[i]);
 			
 			joint_states_.push_back(new_msg);
-			new_msg.clear();
 			
 			// old method
 			/* 
