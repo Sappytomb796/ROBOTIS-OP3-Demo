@@ -24,7 +24,7 @@ namespace robotis_op{
 
             ros::NodeHandle nh_;
             ros::Subscriber op3_joints_sub_;
-            ros::Subscribe button_sub_;		
+            ros::Subscriber button_sub_;		
 	    std::vector<sensor_msgs::JointState> joint_states_;
     	    
 	    /*
