@@ -12,7 +12,8 @@ namespace robotis_op
 	{
 		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
 										&MotionReplay::jointCallback, this);
-		
+		button_sub = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
+
 		joint_states_.clear();
 		
 		// old method
@@ -22,6 +23,9 @@ namespace robotis_op
 		joint_velocity_.clear();
 		joint_effort_.clear();
 		*/
+		
+		record_flag = false;
+		joint_angles_.clear();
 	}
 
 	MotionReplay::~MotionReplay()
@@ -31,6 +35,9 @@ namespace robotis_op
 	
 	void MotionReplay::jointCallback(const sensor_msgs::JointState::ConstPtr& msg)
 	{
+		if(!record_flag)
+			return;
+			
 		if(msg->name.size() == 0)
 			return;
 		
@@ -61,6 +68,21 @@ namespace robotis_op
 			std::cout << "position: " << msg->position[i] << std::endl;
 			std::cout << "velocity: " << msg->velocity[i] << std::endl;
 			std::cout << "effort: " << msg->effort[i] << std::endl;
+		}
+	}
+
+	void MotionReplay::buttonCallback(const std_msgs::String::ConstPtr& msg){
+		if(msg->name.size() == 0)
+			return;
+		
+		if(msg->data == "start"){
+			record_flag = !record_flag;
+			ROS_INFO("Button: start");
+		}
+
+		if(msg->data == "user"){
+			saveReplay("test.motion");
+			ROS_INFO("Button: record");
 		}
 	}
 	
