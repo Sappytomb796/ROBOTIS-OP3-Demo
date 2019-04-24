@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
-
+#include <unistd.h>
 
 namespace robotis_op
 {
@@ -12,7 +12,7 @@ namespace robotis_op
 	{
 		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
 										&MotionReplay::jointCallback, this);
-		button_sub = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
+		button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
 
 		joint_states_.clear();
 		
@@ -70,17 +70,14 @@ namespace robotis_op
 	}
 
 	void MotionReplay::buttonCallback(const std_msgs::String::ConstPtr& msg){
-		if(msg->name.size() == 0)
-			return;
-		
 		if(msg->data == "start"){
 			record_flag = !record_flag;
 			ROS_INFO("Button: start");
 		}
 
 		if(msg->data == "user"){
-			saveReplay("test.motion");
-			ROS_INFO("Button: record");
+			saveReplay("test");
+			ROS_INFO("Button: save");
 		}
 	}
 	
@@ -88,16 +85,17 @@ namespace robotis_op
 	{
 		if(joint_states_.size() == 0)
 		{
-			std::cout << "ERROR: no replay data to save...\n";
+			ROS_INFO("ERROR: no replay data to save...");
 			return false;
 		}
 		
+		ROS_INFO("Current path is %s", get_current_dir_name());
 		std::ofstream file;
-		file.open(replay_name);
+		file.open(replay_name + ".txt");
 		
 		if(!file.is_open())
 		{
-			std::cout << "ERROR: failed to open " << replay_name << ".txt\n";
+			ROS_INFO("ERROR: failed to open %s.txt", replay_name.c_str());
 			return false;
 		}
 		
@@ -136,6 +134,7 @@ namespace robotis_op
 
 		file.close();
 		
+		ROS_INFO("%s.txt written.", replay_name.c_str());
 		return true;
 	}
 	
@@ -161,14 +160,15 @@ namespace robotis_op
 		{
 			std::stringstream stream(data);
 			
-			while(getline(data, token, delimiter))
+			while(getline(stream, token, delimiter))
 			{
 				msg.position.push_back(atof(token.c_str()));
 				ROS_INFO("%s\n", token.c_str());
 			}
 			
-			joint_states.push_back(msg);
-			msg.clear();
+			joint_states_.push_back(msg);
+			msg.name.clear();
+			msg.position.clear();
 		}
 		
 		file.close();
