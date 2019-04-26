@@ -79,11 +79,16 @@ namespace robotis_op
 			saveReplay("test");
 			ROS_INFO("Button: save");
 		}
+		if(msg->data == "mode"){
+			publishJointStates();
+			ROS_INFO("Button: replay");
+		}
 	}
 	
 	void MotionReplay::publishJointStates()
 	{
-		if(joint_states_.size() == 0)
+		if(joint_states_.size() == 0){
+			ROS_INFO("Error: No replay to publish...");
 			return;
 			
 		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin();
@@ -118,8 +123,7 @@ namespace robotis_op
 			for (std::vector<double>::const_iterator pit = (*it).position.begin();
 				 pit != (*it).position.end(); ++pit)
 				file << *pit << '\t';
-				
-			
+			file << '\n';
 		}
 		
 		// old method
