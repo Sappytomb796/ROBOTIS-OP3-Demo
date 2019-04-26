@@ -13,7 +13,7 @@ namespace robotis_op
 		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
 										&MotionReplay::jointCallback, this);
 		button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
-
+		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/direct_control/set_joint_states", 0);
 		joint_states_.clear();
 		
 		// old method
