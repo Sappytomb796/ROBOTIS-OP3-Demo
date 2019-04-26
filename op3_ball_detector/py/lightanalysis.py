@@ -28,7 +28,7 @@ for i in range(len(inputFolder)):
 
 lvm = sorted(lvm, key=lambda tup: tup[0])
 fc =0
-#print(lvm)
+
 lightValues = [0] * len(inputFolder)
 matrix = [[ [0 for a in range(len(inputFolder))] for b in range(rangeY)] for c in range(rangeX)]
 results = [0]*(rangeX*rangeY)
@@ -60,8 +60,7 @@ for i in range(len(inputFolder)):
     sum /= rangeX*rangeY
     linregBV[i] = int(sum)
     linregLight[i] = int(lvm[i][1])
-    #print(str(linregLight[i]) + " " + str(linregBV[i]))
-#print(linregBV)
+
 slope, intercept, rv, pv, serr = stats.linregress(linregLight, linregBV)
 print("mx+ b: " + str(float(slope)) + "x + " + str(float(intercept)))
 print("r-value is: " + str(float(rv)))
@@ -74,7 +73,6 @@ line = [0.0]*50
 for i in range(len(inputFolder)):
     line[i] = regression(linregLight[i])
     
-#print(line[5])
 plot.plot(linregLight,linregBV, 'o', label = "Individual points")
 plot.plot(linregLight, line, 'r', label ="line")
 plot.legend()
