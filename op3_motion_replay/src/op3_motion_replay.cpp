@@ -16,14 +16,6 @@ namespace robotis_op
 		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/direct_control/set_joint_states", 0);
 		joint_states_.clear();
 		
-		// old method
-		/*
-		joint_name_.clear();
-		joint_position_.clear();
-		joint_velocity_.clear();
-		joint_effort_.clear();
-		*/
-		
 		record_flag = false;
 		joint_angles_.clear();
 	}
@@ -51,14 +43,6 @@ namespace robotis_op
 			new_msg.position.push_back(msg->position[i]);
 			new_msg.velocity.push_back(msg->velocity[i]);
 			new_msg.effort.push_back(msg->effort[i]);
-			
-			// old method
-			/* 
-			joint_name_.push_back(msg->name[i]);
-			joint_position_[msg->name[i]].push_back(msg->position[i]);
-			joint_velocity_[msg->name[i]].push_back(msg->velocity[i]);
-			joint_effort_[msg->name[i]].push_back(msg->effort[i]);
-			*/
 			
 			// print for testing
 			// might need to convert position (pos * 180 / M_PI)
@@ -126,31 +110,6 @@ namespace robotis_op
 			file << '\n';
 		}
 		
-		// old method
-		/*
-		file << replay_name << std::endl;
-		
-		for (std::vector<std::string>::const_iterator it = joint_name_.begin(); it != joint_name_.end(); ++it)
-		{
-			file << *it << std::endl;
-
-			for (std::vector<double>::const_iterator v = joint_position_[*it].begin(); v != joint_position_[*it].end(); ++v)
-				file << *v << '\t';
-	
-			file << std::endl;
-
-			for (std::vector<double>::const_iterator v = joint_velocoty_[*it].begin(); v != joint_velocity_[*it].end(); ++v)
-				file << *v << '\t';
-
-			file << std::endl;
-
-			for (std::vector<double>::const_iterator v = joint_effort_[*it].begin(); v != joint_effort_[*it].end(); ++v)
-				file << *v << '\t';
-		}
-		*/
-		
-		//file << std::endl;
-
 		file.close();
 		
 		ROS_INFO("%s.txt written.", replay_name.c_str());

@@ -11,5 +11,4 @@ int main(int argc, char **argv)
   ROS_INFO("Start motion replay");
 
   ros::spin();
-
 }
