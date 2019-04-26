@@ -13,7 +13,7 @@ namespace robotis_op
 		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
 										&MotionReplay::jointCallback, this);
 		button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
-		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/direct_control/set_joint_states", 0);
+		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/set_joint_states", 0);
 		joint_states_.clear();
 		
 		record_flag = false;
@@ -74,6 +74,7 @@ namespace robotis_op
 		if(joint_states_.size() == 0){
 			ROS_INFO("Error: No replay to publish...");
 			return;
+		}
 			
 		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin();
 			 it != joint_states_.end(); ++it)
