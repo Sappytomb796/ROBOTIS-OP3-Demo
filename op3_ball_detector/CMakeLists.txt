@@ -52,12 +52,15 @@ add_message_files(
   FILES
   CircleSetStamped.msg
   BallDetectorParams.msg
+  SaveImageParams.msg
 )
 
 add_service_files(
   FILES
   GetParameters.srv
   SetParameters.srv
+  SaveImage.srv
+  SwitchDetection.srv
 )
 
 generate_messages(

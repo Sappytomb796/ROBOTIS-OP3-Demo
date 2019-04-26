@@ -10,3 +10,5 @@ qtcreator-build
 *.user
 *.autosave
 .DS_Store
+.vscode/
+
