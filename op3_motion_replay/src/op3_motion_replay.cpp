@@ -52,8 +52,6 @@ namespace robotis_op
 			new_msg.velocity.push_back(msg->velocity[i]);
 			new_msg.effort.push_back(msg->effort[i]);
 			
-			joint_states_.push_back(new_msg);
-			
 			// old method
 			/* 
 			joint_name_.push_back(msg->name[i]);
@@ -67,6 +65,8 @@ namespace robotis_op
 			ROS_INFO("%s\nposition: %f\nvelocity: %f\neffort: %f\n",
 					 msg->name[i].c_str(), msg->position[i], msg->velocity[i], msg->effort[i]);
 		}
+		
+		joint_states_.push_back(new_msg);
 	}
 
 	void MotionReplay::buttonCallback(const std_msgs::String::ConstPtr& msg){
@@ -79,6 +79,19 @@ namespace robotis_op
 			saveReplay("test");
 			ROS_INFO("Button: save");
 		}
+	}
+	
+	void MotionReplay::publishJointStates()
+	{
+		if(joint_states_.size() == 0)
+			return;
+			
+		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin();
+			 it != joint_states_.end(); ++it)
+		{
+			 joint_state_pub_.publish(*it);
+		}
+	
 	}
 	
 	bool MotionReplay::saveReplay(std::string replay_name)
@@ -105,6 +118,8 @@ namespace robotis_op
 			for (std::vector<double>::const_iterator pit = (*it).position.begin();
 				 pit != (*it).position.end(); ++pit)
 				file << *pit << '\t';
+				
+			
 		}
 		
 		// old method
