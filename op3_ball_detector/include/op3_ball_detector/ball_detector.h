@@ -20,6 +20,7 @@
 #define _BALL_DETECTOR_H_
 
 #include <string>
+#include <math.h>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -89,7 +90,7 @@ class BallDetector
 
   bool loadDetectionSettings();
   void applyDetectionSettings(); // types TBD
-  void convertHSVtoRGB(int h, int s, int v, int &rOut, int &gOut, int &bOut);
+  void convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut);
   void convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut);
 
   void resetParameter();

@@ -73,9 +73,6 @@ BallDetector::BallDetector()
   nh_.param<int>("ellipse_size", detect_config.ellipse_size, params_config_.ellipse_size);
   nh_.param<bool>("filter_debug", detect_config.debug, params_config_.debug);
 
-  params_color_.name = "";
-  params_color_.test_val = 0;
-
   //sets publishers
   image_pub_ = it_.advertise("image_out", 100);
   circles_pub_ = nh_.advertise<op3_ball_detector::CircleSetStamped>("circle_set", 100);
@@ -153,7 +150,7 @@ void BallDetector::process()
 
   int avgH, avgS, avgV;
 
-  avgH = (params_config_.filter_threshold.h_max - params_config_.filter_threshold.h_min) / 2;
+  avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max) / 2;
   avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min) / 2;
   avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min) / 2;
 
@@ -162,6 +159,10 @@ void BallDetector::process()
   convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
 
   std::cout << "RGB: (" << r << ", " << g << ", " << b << ")" << std::endl << std::endl;
+
+  convertRGBtoHSV(r, g, b, h, s, v);
+
+  std::cout << "HSV: (" << h << ", " << s << ", " << v << ")" << std::endl << std::endl;
 
   if (cv_img_ptr_sub_ != NULL)
   {
@@ -445,20 +446,20 @@ void BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
     return;
-  int medianBVal = params_color_.getMedianBVal();
-  params_config_.filter_threshold.h_min  = params_color_.test_val;
+  // int medianBVal = params_color_.getMedianBVal();
+  // params_config_.filter_threshold.h_min  = params_color_.test_val;
 }
 
-void BallDetector::convertHSVtoRGB(int h, int s, int v, int &rOut, int &gOut, int &bOut)
+void BallDetector::convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut)
 {
-  double scaledS = 1 / s;
-  double scaledV = 1 / v;
+  double scaledS = s / 255;
+  double scaledV = v / 255;
 
   double C = scaledV * scaledS;
-  double X = C * (1 - abs((h / 60) % 2 - 1));
+  double X = C * (1 - std::abs(fmod((h / 60) , 2) - 1));
   double m = scaledV - C;
 
-  int r, g, b;
+  double r, g, b;
 
   if(h < 60){
     r = C;
@@ -493,27 +494,29 @@ void BallDetector::convertHSVtoRGB(int h, int s, int v, int &rOut, int &gOut, in
 
 void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut)
 {
-  double rScaled = r / 255;
-  double gScaled = g / 255;
-  double bScaled = b / 255;
+  double rScaled = (double)r / 255;
+  double gScaled = (double)g / 255;
+  double bScaled = (double)b / 255;
 
   double Cmax = std::max(std::max(rScaled, gScaled), bScaled);
   double Cmin = std::min(std::min(rScaled, gScaled), bScaled);
   double delta = Cmax - Cmin;
-  
+
+  double val = ((rScaled - gScaled) / delta) + 4.0;
+
   if(delta == 0){
     hOut = 0;
   } else if(Cmax == rScaled){
-    hOut = 60 * (((gScaled - bScaled) / delta) % 6);
+    hOut = 60 * (fmod(((gScaled - bScaled) / delta) , 6));
   } else if(Cmax == gScaled){
     hOut = 60 * (((bScaled - rScaled) / delta) + 2);
   } else if(Cmax == bScaled){
     hOut = 60 * (((rScaled - gScaled) / delta) + 4);
   }
 
-  sOut = Cmax ? (delta / Cmax) : 0;
+  sOut = Cmax ? (delta / Cmax) * 255 : 0;
 
-  vOut = Cmax;
+  vOut = Cmax * 255;
 }
 
 void BallDetector::resetParameter()
@@ -619,9 +622,11 @@ void BallDetector::printConfig()
             << params_config_.ellipse_size << std::endl << "    filter_image_to_debug: " << params_config_.debug
             << std::endl << std::endl;
 
-  std::cout << "Test Configuration:" << std::endl << "    name: "
-            << params_color_.name << std::endl << "    test_val: "
-            << params_color_.test_val << std::endl;
+  std::cout << "Ball color Configuration:" << std::endl << "    x_min: "
+            << params_color_.x_min << std::endl << "    x_max: "
+            << params_color_.x_max << std::endl << "    light_slope: "
+            << params_color_.light_slope << std::endl << "    light_constant: "
+            << params_color_.light_constant << std::endl << std::endl;
 }
 
 void BallDetector::saveConfig()
