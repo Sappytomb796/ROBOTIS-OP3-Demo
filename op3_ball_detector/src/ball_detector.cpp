@@ -95,6 +95,7 @@ BallDetector::BallDetector()
 
   // color configure
   color_config_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/config/red_ball_config.yaml";
+  hue_range = 50;
 
   // web setting
   param_pub_ = nh_.advertise<op3_ball_detector::BallDetectorParams>("current_params", 1);
@@ -102,7 +103,7 @@ BallDetector::BallDetector()
   set_param_client_ = nh_.advertiseService("set_param", &BallDetector::setParamCallback, this);
   get_param_client_ = nh_.advertiseService("get_param", &BallDetector::getParamCallback, this);
   save_image_client_ = nh_.advertiseService("save_image", &BallDetector::saveImageCallback, this);
-  switch_detection_client_ = nh_.advertiseService("switch_detection", &BallDetector::switchDetectionCallback, this);
+  switch_detection_client_ = nh_.advertiseService("switch_detecton", &BallDetector::switchDetectionCallback, this);
   default_setting_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/config/ball_detector_params_default.yaml";
 
   //sets config and prints it
@@ -147,6 +148,20 @@ void BallDetector::process()
 
   applyDetectionSettings();
   printConfig();
+
+  int r, g, b, h, s, v;
+
+  int avgH, avgS, avgV;
+
+  avgH = (params_config_.filter_threshold.h_max - params_config_.filter_threshold.h_min) / 2;
+  avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min) / 2;
+  avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min) / 2;
+
+  std::cout << "HSV: (" << avgH << ", " << avgS << ", " << avgV << ")" << std::endl << std::endl;
+
+  convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
+
+  std::cout << "RGB: (" << r << ", " << g << ", " << b << ")" << std::endl << std::endl;
 
   if (cv_img_ptr_sub_ != NULL)
   {
@@ -411,8 +426,10 @@ bool BallDetector::loadDetectionSettings()
   {
     YAML::Node config = YAML::LoadFile(color_config_path_.c_str());
 
-    params_color_.name = config["name"].as<std::string>();
-    params_color_.test_val = config["test_val"].as<int>();
+    params_color_.x_min = config["x_min"].as<int>();
+    params_color_.x_max = config["x_max"].as<int>();
+    params_color_.light_slope = config["light_slope"].as<double>();
+    params_color_.light_constant = config["light_constant"].as<double>();
     has_color_config_ = true;
   }
    catch (const std::exception& e)
@@ -428,7 +445,75 @@ void BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
     return;
-  params_config_.filter_threshold.h_min = params_color_.test_val;
+  int medianBVal = params_color_.getMedianBVal();
+  params_config_.filter_threshold.h_min  = params_color_.test_val;
+}
+
+void BallDetector::convertHSVtoRGB(int h, int s, int v, int &rOut, int &gOut, int &bOut)
+{
+  double scaledS = 1 / s;
+  double scaledV = 1 / v;
+
+  double C = scaledV * scaledS;
+  double X = C * (1 - abs((h / 60) % 2 - 1));
+  double m = scaledV - C;
+
+  int r, g, b;
+
+  if(h < 60){
+    r = C;
+    g = X;
+    b = 0;
+  } else if(h < 120){
+    r = X;
+    g = C;
+    b = 0;
+  } else if(h < 180){
+    r = 0;
+    g = C;
+    b = X;
+  } else if(h < 240){
+    r = 0;
+    g = X;
+    b = C;
+  } else if(h < 300){
+    r = X;
+    g = 0;
+    b = C;
+  } else {
+    r = C;
+    g = 0;
+    b = X;
+  }
+
+  rOut = (r + m) * 255;
+  gOut = (g + m) * 255;
+  bOut = (b + m) * 255;
+}
+
+void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut)
+{
+  double rScaled = r / 255;
+  double gScaled = g / 255;
+  double bScaled = b / 255;
+
+  double Cmax = std::max(std::max(rScaled, gScaled), bScaled);
+  double Cmin = std::min(std::min(rScaled, gScaled), bScaled);
+  double delta = Cmax - Cmin;
+  
+  if(delta == 0){
+    hOut = 0;
+  } else if(Cmax == rScaled){
+    hOut = 60 * (((gScaled - bScaled) / delta) % 6);
+  } else if(Cmax == gScaled){
+    hOut = 60 * (((bScaled - rScaled) / delta) + 2);
+  } else if(Cmax == bScaled){
+    hOut = 60 * (((rScaled - gScaled) / delta) + 4);
+  }
+
+  sOut = Cmax ? (delta / Cmax) : 0;
+
+  vOut = Cmax;
 }
 
 void BallDetector::resetParameter()

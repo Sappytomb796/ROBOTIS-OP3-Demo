@@ -89,6 +89,8 @@ class BallDetector
 
   bool loadDetectionSettings();
   void applyDetectionSettings(); // types TBD
+  void convertHSVtoRGB(int h, int s, int v, int &rOut, int &gOut, int &bOut);
+  void convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut);
 
   void resetParameter();
   void publishParam();
@@ -143,6 +145,8 @@ class BallDetector
   BallColorConfig params_color_;
   std::string color_config_path_;
   bool has_color_config_;
+
+  int hue_range;
 
   // web setting
   std::string default_setting_path_;

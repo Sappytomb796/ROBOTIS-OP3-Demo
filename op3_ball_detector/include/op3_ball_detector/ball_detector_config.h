@@ -19,6 +19,9 @@
 #ifndef _DETECTOR_CONFIG_H_
 #define _DETECTOR_CONFIG_H_
 
+#include <ctime>
+#include <stdlib.h>
+
 namespace robotis_op
 {
 
@@ -42,6 +45,10 @@ const int FILTER_S_MAX_DEFAULT = 255;
 const int FILTER_V_MIN_DEFAULT = 0;
 const int FILTER_V_MAX_DEFAULT = 255;
 const int ELLIPSE_SIZE = 5;
+const int X_MIN_DEFAULT = 0;
+const int X_MAX_DEFAULT = 4000;
+const double LIGHT_SLOPE_DEFAULT = 1;
+const double LIGHT_CONSTANT_DEFAULT = 0;
 
 class HsvFilter
 {
@@ -104,8 +111,21 @@ class DetectorConfig
 class BallColorConfig
 {
  public:
-  std::string name;
-  int test_val; 
+  BallColorConfig()
+    : x_min(X_MIN_DEFAULT),
+      x_max(X_MAX_DEFAULT),
+      light_slope(LIGHT_SLOPE_DEFAULT),
+      light_constant(LIGHT_CONSTANT_DEFAULT)
+  {
+    srand(time(0));
+  }
+  
+  int getMedianBVal();
+
+  int x_min;
+  int x_max;
+  double light_slope;
+  double light_constant;
 };
 
 }

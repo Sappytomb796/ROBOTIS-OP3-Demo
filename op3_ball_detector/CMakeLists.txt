@@ -107,6 +107,7 @@ include_directories(
 
 add_executable(ball_detector_node
   src/ball_detector.cpp
+  src/ball_detector_config.cpp
   src/ball_detector_node.cpp
 )
 
