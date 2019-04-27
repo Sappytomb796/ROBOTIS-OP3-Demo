@@ -92,7 +92,9 @@ BallDetector::BallDetector()
 
   // color configure
   color_config_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/config/red_ball_config.yaml";
-  hue_range = 50;
+  h_range_ = 50;
+  s_range_ = 50;
+  v_range_ = 50;
 
   // web setting
   param_pub_ = nh_.advertise<op3_ball_detector::BallDetectorParams>("current_params", 1);
@@ -138,34 +140,16 @@ void BallDetector::process()
   if (switch_detection_flag_ == true)
   {
     loadDetectionSettings();
-    // applyDetectionSettings();
-    std::cout << "\n\nIN PROCESS\n";
-    printConfig();
+    applyDetectionSettings();
   }
 
-  // applyDetectionSettings();
   printConfig();
 
   int r, g, b, h, s, v;
 
   int avgH, avgS, avgV;
 
-  avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max) / 2;
-  avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min) / 2;
-  avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min) / 2;
-
-  std::cout << "HSV: (" << avgH << ", " << avgS << ", " << avgV << ")" << std::endl << std::endl;
-
-  convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
-
-  std::cout << "RGB: (" << r << ", " << g << ", " << b << ")" << std::endl << std::endl;
-
-  convertRGBtoHSV(r, g, b, h, s, v);
-
-  std::cout << "HSV: (" << h << ", " << s << ", " << v << ")" << std::endl << std::endl;
-
   for(int i = 0; i < 10; ++i){
-    std::cout << "B" << i << " :" << params_color_.getMedianBVal(params_color_.sampleLightVal()) << std::endl;
   }
 
   if (cv_img_ptr_sub_ != NULL)
@@ -427,6 +411,7 @@ bool BallDetector::switchDetectionCallback(op3_ball_detector::SwitchDetection::R
 
 bool BallDetector::loadDetectionSettings()
 {
+  std::cout << "Loading detection settings..." << std::endl << std::endl;
   try
   {
     YAML::Node config = YAML::LoadFile(color_config_path_.c_str());
@@ -450,8 +435,31 @@ void BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
     return;
-  // int medianBVal = params_color_.getMedianBVal();
-  // params_config_.filter_threshold.h_min  = params_color_.test_val;
+  int h, s, v, r, g, b;
+  int B = params_color_.getMedianBVal(params_color_.sampleLightVal());
+
+  double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
+  double avgS = (params_config_.filter_threshold.s_min - params_config_.filter_threshold.s_max ) / 2;
+  double avgV = (params_config_.filter_threshold.v_min - params_config_.filter_threshold.v_max ) / 2;
+
+  convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
+  convertRGBtoHSV(r, g, B, h, s, v);
+
+  std::cout << "Updating HSV to (" << h << ", " << s << ", " << v << ")" << std::endl;
+
+  updateHSV(h, s, v);
+}
+
+void BallDetector::updateHSV(int h, int s, int v)
+{
+  params_config_.filter_threshold.h_min = h + h_range_ / 2;  // min is the larger number for some reason
+  params_config_.filter_threshold.h_max = h - h_range_ / 2;
+  params_config_.filter_threshold.s_max = s + s_range_ / 2;
+  params_config_.filter_threshold.s_min = s - s_range_ / 2;
+  params_config_.filter_threshold.v_max = v + v_range_ / 2;
+  params_config_.filter_threshold.v_min = v - v_range_ / 2;
+
+  // printConfig();
 }
 
 void BallDetector::convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut)

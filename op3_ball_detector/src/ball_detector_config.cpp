@@ -31,9 +31,4 @@ int BallColorConfig::getMedianBVal(int x_val)
     return light_slope * x_val + light_constant;
 }
 
-// int modifyHSV(int R)
-// {
-
-// }
-
 }
