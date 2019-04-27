@@ -74,6 +74,7 @@ namespace robotis_op
 		if(joint_states_.size() == 0){
 			ROS_INFO("Error: No replay to publish...");
 			return;
+		}
 			
 		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin();
 			 it != joint_states_.end(); ++it)
