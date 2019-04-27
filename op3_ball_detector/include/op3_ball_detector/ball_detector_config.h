@@ -120,7 +120,8 @@ class BallColorConfig
     srand(time(0));
   }
   
-  int getMedianBVal();
+  int sampleLightVal();
+  int getMedianBVal(int x_val);
 
   int x_min;
   int x_max;

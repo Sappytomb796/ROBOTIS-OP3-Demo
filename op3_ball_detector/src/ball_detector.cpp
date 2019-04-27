@@ -138,12 +138,12 @@ void BallDetector::process()
   if (switch_detection_flag_ == true)
   {
     loadDetectionSettings();
-    applyDetectionSettings();
+    // applyDetectionSettings();
     std::cout << "\n\nIN PROCESS\n";
     printConfig();
   }
 
-  applyDetectionSettings();
+  // applyDetectionSettings();
   printConfig();
 
   int r, g, b, h, s, v;
@@ -163,6 +163,10 @@ void BallDetector::process()
   convertRGBtoHSV(r, g, b, h, s, v);
 
   std::cout << "HSV: (" << h << ", " << s << ", " << v << ")" << std::endl << std::endl;
+
+  for(int i = 0; i < 10; ++i){
+    std::cout << "B" << i << " :" << params_color_.getMedianBVal(params_color_.sampleLightVal()) << std::endl;
+  }
 
   if (cv_img_ptr_sub_ != NULL)
   {
