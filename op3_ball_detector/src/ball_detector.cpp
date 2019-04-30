@@ -145,13 +145,6 @@ void BallDetector::process()
 
   printConfig();
 
-  int r, g, b, h, s, v;
-
-  int avgH, avgS, avgV;
-
-  for(int i = 0; i < 10; ++i){
-  }
-
   if (cv_img_ptr_sub_ != NULL)
   {
     cv::Mat img_hsv, img_filtered;
@@ -161,6 +154,8 @@ void BallDetector::process()
 
     // image filtering
     filterImage(img_hsv, img_filtered);
+
+    std::cout << "TEST: " << img_filtered.size() << std::endl;
 
     //detect circles
     houghDetection2(img_filtered);
@@ -864,7 +859,7 @@ void BallDetector::inRangeHsv(const cv::Mat &input_img, const HsvFilter &filter_
   {
     cv::Scalar min_value = cv::Scalar(scaled_hue_min, filter_value.s_min, filter_value.v_min, 0);
     cv::Scalar max_value = cv::Scalar(scaled_hue_max, filter_value.s_max, filter_value.v_max, 0);
-
+  //TODO: Can check output image to see if ball color detected?
     cv::inRange(input_img, min_value, max_value, output_img);
   }
   else

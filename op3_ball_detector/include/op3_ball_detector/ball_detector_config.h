@@ -117,7 +117,7 @@ class BallColorConfig
       light_slope(LIGHT_SLOPE_DEFAULT),
       light_constant(LIGHT_CONSTANT_DEFAULT)
   {
-    srand(time(0));
+    srand(time(NULL));
   }
   
   int sampleLightVal();
