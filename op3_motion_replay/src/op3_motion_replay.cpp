@@ -14,6 +14,10 @@ namespace robotis_op
 										&MotionReplay::jointCallback, this);
 		button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
 		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/set_joint_states", 0);
+		module_pub_ = nh_.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 0);
+		
+		//joint_module_ = nh_.serviceClient<robotis_controller_msgs::SetModule>("/robotis/set_present_ctrl_modules");
+		
 		joint_states_.clear();
 		
 		record_flag = false;
@@ -23,6 +27,24 @@ namespace robotis_op
 	MotionReplay::~MotionReplay()
 	{
 		
+	}
+	
+	void MotionReplay::enableModule(std::string module_name)
+	{
+		std_msgs::String msg;
+		msg.data = module_name;
+		
+		module_pub_.publish(msg);
+		
+		/*
+		robotis_controller_msgs::SetModule msg;
+		msg.request.module_name = module_name;
+		
+		if(!joint_module_.call(msg))
+		{
+			ROS_ERROR("module not set...\n");
+		}
+		*/
 	}
 	
 	void MotionReplay::jointCallback(const sensor_msgs::JointState::ConstPtr& msg)
@@ -64,6 +86,7 @@ namespace robotis_op
 			ROS_INFO("Button: save");
 		}
 		if(msg->data == "mode"){
+			enableModule("direct_control_module");	// notifies framework to activate direct_control_module
 			publishJointStates();
 			ROS_INFO("Button: replay");
 		}

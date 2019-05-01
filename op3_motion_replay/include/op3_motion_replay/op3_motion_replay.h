@@ -7,6 +7,8 @@
 #include <std_msgs/String.h>
 #include <vector>
 
+#include "robotis_controller_msgs/SetModule.h"
+
 namespace robotis_op{
 	class MotionReplay{
 		public:
@@ -15,6 +17,8 @@ namespace robotis_op{
 
 		protected:
 			const std::string MODULE_NAME;
+			
+			void enableModule(std::string module_name);
 
 			void jointCallback(const sensor_msgs::JointState::ConstPtr& msg);
 			void buttonCallback(const std_msgs::String::ConstPtr& msg);
@@ -25,9 +29,14 @@ namespace robotis_op{
 			bool loadReplay(std::string replay_name);
 
 			ros::NodeHandle nh_;
+			
 			ros::Subscriber op3_joints_sub_;
 			ros::Subscriber button_sub_;	
-			ros::Publisher joint_state_pub_;	
+			ros::Publisher joint_state_pub_;
+			ros::Publisher module_pub_;	
+			
+			//ros::ServiceClient joint_module_;
+			
 			std::vector<sensor_msgs::JointState> joint_states_;
 
 			bool record_flag;
