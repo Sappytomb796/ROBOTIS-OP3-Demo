@@ -374,8 +374,8 @@ bool BallDetector::saveImageCallback(op3_ball_detector::SaveImage::Request &req,
   std::string filename = "/home/robotis/" + req.params.name + ".png";
   if (cv_img_ptr_sub_ != NULL) {
     cv::Mat out_image;
-    //cv::cvtColor(cv_img_ptr_sub_->image, out_image, cv::COLOR_RGB2BGR);
-    if (cv::imwrite(filename, cv_img_ptr_sub_->image) == false) {
+    cv::cvtColor(cv_img_ptr_sub_->image, out_image, cv::COLOR_RGB2BGR);
+    if (cv::imwrite(filename, out_image) == false) {
       res.returns.name = "Failed for some reason";
     }
     else {
@@ -433,16 +433,17 @@ void BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
     return;
-  int h, s, v, r, g, b;
-  int B = params_color_.getMedianBVal(params_color_.sampleLightVal());
+  int h, s, v, g, b;
+  int R = params_color_.getMedianRVal(params_color_.sampleLightVal());
+  g = 0;
+  b = 0;
 
   double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
   double avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min ) / 2;
   double avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min ) / 2;
 
-  convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
-  //convertRGBtoHSV(r, g, B, h, s, v);
-  convertRGBtoHSV(B, g, b, h, s, v);
+//   convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
+  convertRGBtoHSV(R, g, b, h, s, v);
 
   std::cout << "Updating HSV to (" << h << ", " << s << ", " << v << ")" << std::endl;
 

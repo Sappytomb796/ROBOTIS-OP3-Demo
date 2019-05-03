@@ -26,7 +26,7 @@ int BallColorConfig::sampleLightVal()
     return rand() % x_max + x_min;
 }
 
-int BallColorConfig::getMedianBVal(int x_val)
+int BallColorConfig::getMedianRVal(int x_val)
 {
     return light_slope * x_val + light_constant;
 }
