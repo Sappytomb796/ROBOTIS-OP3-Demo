@@ -9,10 +9,6 @@
 	<param name="/robotis/direct_control/default_moving_time" value="0.04"/>
 	<param name="/robotis/direct_control/default_moving_angle" value="90"/>
 
-	<node pkg="op3_manager" type="op3_manager" name="op3_manager" output="screen">
-		<param name="angle_unit" value="30"/>
-	</node>
-
-	<node pkg="op3_localization" type="op3_localization" name="op3_localization" output="screen"/>
+	<node pkg="op3_localization" type="op3_localization" name="op3_localization_motion_replay" output="screen"/>
 	<node pkg="op3_motion_replay" type="op3_motion_replay_node" name="op3_motion_replay_node" output="screen"/>
 </launch>

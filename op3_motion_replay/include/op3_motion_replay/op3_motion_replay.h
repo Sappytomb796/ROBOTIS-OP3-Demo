@@ -28,6 +28,7 @@ namespace robotis_op{
 			void enableModule(std::string module_name);
 
 			void jointCallback(const sensor_msgs::JointState::ConstPtr& msg);
+			void buttonCallback(const std_msgs::String::ConstPtr& msg);
 			void webCallback(const std_msgs::MultiArrayDimension::ConstPtr& msg);
 
 			void publishJointStates();
@@ -39,11 +40,12 @@ namespace robotis_op{
 			ros::NodeHandle nh_;
 			
 			ros::Subscriber op3_joints_sub_;
-			ros::Subscriber web_sub_;	
+			ros::Subscriber web_sub_;
+			ros::Subscriber button_sub_;	
 			ros::Publisher joint_state_pub_;
 			ros::Publisher module_pub_;	
 			
-			//ros::ServiceClient joint_module_;
+			ros::ServiceClient joint_module_;
 			
 			std::vector<sensor_msgs::JointState> joint_states_;
 

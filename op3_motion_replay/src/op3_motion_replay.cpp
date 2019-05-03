@@ -13,8 +13,8 @@ namespace robotis_op
 	{
 		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
 										&MotionReplay::jointCallback, this);
-		//button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
-		web_sub_ = nh_.subscribe("/robotis/replay", &MotionReplay::webCallback, this);
+		button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
+		web_sub_ = nh_.subscribe("/robotis/replay", 1, &MotionReplay::webCallback, this);
 		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/set_joint_states", 0);
 		module_pub_ = nh_.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 0);
 		
@@ -77,10 +77,27 @@ namespace robotis_op
 		joint_states_.push_back(new_msg);
 	}
 
+	void MotionReplay::buttonCallback(const std_msgs::String::ConstPtr& msg){
+		if(msg->data == "start"){
+			record_flag = !record_flag;
+			ROS_INFO("Button: start");
+		}
+
+		if(msg->data == "user"){
+			saveReplay("test");
+			ROS_INFO("Button: save");
+		}
+		if(msg->data == "mode"){
+			enableModule("direct_control_module");	// notifies framework to activate direct_control_module
+			publishJointStates();
+			ROS_INFO("Button: replay");
+		}
+	}
+
 	void MotionReplay::webCallback(const std_msgs::MultiArrayDimension::ConstPtr& msg){
 		switch(msg->size){
 			case REPLAY_START:
-				record_flag = !recordflag;
+				record_flag = !record_flag;
 				ROS_INFO("Button: start");
 				break;
 
@@ -105,8 +122,8 @@ namespace robotis_op
 				ROS_INFO("Button: replay");
 				break;
 
-			case default:
-				ROS_INFO("Unrecognized button code received...")
+			default:
+				ROS_INFO("Unrecognized button code received...");
 				break;
 		}
 	}
@@ -117,13 +134,16 @@ namespace robotis_op
 			ROS_INFO("Error: No replay to publish...");
 			return;
 		}
-			
+		
+		ros::Rate loop_rate(30);
+
 		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin();
 			 it != joint_states_.end(); ++it)
 		{
 			 joint_state_pub_.publish(*it);
+			 loop_rate.sleep();
+       			 ROS_INFO("%f: \n", (*it).position[0]);
 		}
-	
 	}
 	
 	bool MotionReplay::saveReplay(std::string replay_name)
@@ -198,12 +218,13 @@ namespace robotis_op
 	}
 
 	void MotionReplay::deleteReplay(std::string file_name){
-		if(remove(file_name) != 0){
-			ROS_INFO("Removed %s.", file_name);
+		const char * file_path = file_name.c_str();
+		if(remove(file_path) != 0){
+			ROS_INFO("Removed %s.", file_path);
 		}
 		else
 		{
-			ROS_INFO("Failed to remove %s.", file_name);
+			ROS_INFO("Failed to remove %s.", file_path);
 		}
 	}
 }
