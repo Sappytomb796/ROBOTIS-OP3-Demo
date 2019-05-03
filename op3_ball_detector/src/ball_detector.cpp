@@ -92,9 +92,11 @@ BallDetector::BallDetector()
 
   // color configure
   color_config_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/config/red_ball_config.yaml";
-  h_range_ = 50;
-  s_range_ = 50;
-  v_range_ = 50;
+  h_range_ = 140;
+  s_range_ = 40;
+  v_range_ = 100;
+  switch_detection_flag_ = false;
+  num_call_ = 0;
 
   // web setting
   param_pub_ = nh_.advertise<op3_ball_detector::BallDetectorParams>("current_params", 1);
@@ -102,7 +104,7 @@ BallDetector::BallDetector()
   set_param_client_ = nh_.advertiseService("set_param", &BallDetector::setParamCallback, this);
   get_param_client_ = nh_.advertiseService("get_param", &BallDetector::getParamCallback, this);
   save_image_client_ = nh_.advertiseService("save_image", &BallDetector::saveImageCallback, this);
-  switch_detection_client_ = nh_.advertiseService("switch_detecton", &BallDetector::switchDetectionCallback, this);
+  switch_detection_client_ = nh_.advertiseService("switch_detection", &BallDetector::switchDetectionCallback, this);
   default_setting_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/config/ball_detector_params_default.yaml";
 
   //sets config and prints it
@@ -135,15 +137,14 @@ void BallDetector::process()
   if (enable_ == false)
     return;
 
-  switch_detection_flag_ = true;
-
-  if (switch_detection_flag_ == true)
+  if (switch_detection_flag_ == true && 50 <= num_call_++)
   {
-    loadDetectionSettings();
+    num_call_ = 0;
+    std::cout << "ENTERED" << std::endl;
     applyDetectionSettings();
   }
 
-  printConfig();
+  //printConfig();
 
   if (cv_img_ptr_sub_ != NULL)
   {
@@ -155,7 +156,7 @@ void BallDetector::process()
     // image filtering
     filterImage(img_hsv, img_filtered);
 
-    std::cout << "TEST: " << img_filtered.size() << std::endl;
+    //std::cout << "TEST: " << img_filtered.empty() << std::endl;
 
     //detect circles
     houghDetection2(img_filtered);
@@ -372,6 +373,8 @@ bool BallDetector::saveImageCallback(op3_ball_detector::SaveImage::Request &req,
 {
   std::string filename = "/home/robotis/" + req.params.name + ".png";
   if (cv_img_ptr_sub_ != NULL) {
+    cv::Mat out_image;
+    //cv::cvtColor(cv_img_ptr_sub_->image, out_image, cv::COLOR_RGB2BGR);
     if (cv::imwrite(filename, cv_img_ptr_sub_->image) == false) {
       res.returns.name = "Failed for some reason";
     }
@@ -434,15 +437,18 @@ void BallDetector::applyDetectionSettings()
   int B = params_color_.getMedianBVal(params_color_.sampleLightVal());
 
   double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
-  double avgS = (params_config_.filter_threshold.s_min - params_config_.filter_threshold.s_max ) / 2;
-  double avgV = (params_config_.filter_threshold.v_min - params_config_.filter_threshold.v_max ) / 2;
+  double avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min ) / 2;
+  double avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min ) / 2;
 
   convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
-  convertRGBtoHSV(r, g, B, h, s, v);
+  //convertRGBtoHSV(r, g, B, h, s, v);
+  convertRGBtoHSV(B, g, b, h, s, v);
 
   std::cout << "Updating HSV to (" << h << ", " << s << ", " << v << ")" << std::endl;
 
   updateHSV(h, s, v);
+  publishParam();
+  //saveConfig();
 }
 
 void BallDetector::updateHSV(int h, int s, int v)
@@ -453,6 +459,20 @@ void BallDetector::updateHSV(int h, int s, int v)
   params_config_.filter_threshold.s_min = s - s_range_ / 2;
   params_config_.filter_threshold.v_max = v + v_range_ / 2;
   params_config_.filter_threshold.v_min = v - v_range_ / 2;
+
+  params_config_.filter_threshold.h_min = std::min(params_config_.filter_threshold.h_min, 360);
+  params_config_.filter_threshold.h_max = std::max(params_config_.filter_threshold.h_max, 0);
+  params_config_.filter_threshold.s_min = std::max(params_config_.filter_threshold.s_min, 0);
+  params_config_.filter_threshold.s_max = std::min(params_config_.filter_threshold.s_max, 255);
+  params_config_.filter_threshold.v_min = std::max(params_config_.filter_threshold.v_min, 0);
+  params_config_.filter_threshold.v_max = std::min(params_config_.filter_threshold.v_max, 255);
+
+  std::cout << "VALS:	" << params_config_.filter_threshold.h_min << "	"
+		<< params_config_.filter_threshold.h_max << "	"
+		<< params_config_.filter_threshold.s_max << "	"
+		<< params_config_.filter_threshold.s_min << "	"
+		<< params_config_.filter_threshold.v_max << "	"
+		<< params_config_.filter_threshold.v_min << std::endl << std::endl;
 
   // printConfig();
 }
@@ -465,6 +485,15 @@ void BallDetector::convertHSVtoRGB(double h, double s, double v, int &rOut, int 
   double C = scaledV * scaledS;
   double X = C * (1 - std::abs(fmod((h / 60) , 2) - 1));
   double m = scaledV - C;
+
+/*
+  std::cout << "H : " << h << std::endl;
+  std::cout << "S : " << scaledS << std::endl;
+  std::cout << "V : " << scaledV << std::endl;
+  std::cout << "C : " << C << std::endl;
+  std::cout << "X : " << X << std::endl;
+  std::cout << "M : " << m << std::endl;
+*/
 
   double r, g, b;
 
@@ -505,6 +534,9 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
   double gScaled = (double)g / 255;
   double bScaled = (double)b / 255;
 
+  std::cout << "r " << r << " g " << g << " b " << b << std::endl;
+  std::cout << "rS " << rScaled << " gS " << gScaled << " bS " << bScaled << std::endl;
+
   double Cmax = std::max(std::max(rScaled, gScaled), bScaled);
   double Cmin = std::min(std::min(rScaled, gScaled), bScaled);
   double delta = Cmax - Cmin;
@@ -521,6 +553,7 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
     hOut = 60 * (((rScaled - gScaled) / delta) + 4);
   }
 
+  std::cout << "MAX: " << Cmax << " MIN " << Cmin << std::endl;
   sOut = Cmax ? (delta / Cmax) * 255 : 0;
 
   vOut = Cmax * 255;
@@ -736,6 +769,8 @@ void BallDetector::filterImage(const cv::Mat &in_filter_img, cv::Mat &out_filter
     return;
 
   inRangeHsv(in_filter_img, params_config_.filter_threshold, out_filter_img);
+
+  //std::cout << "OTHER TEST: " << out_filter_img.empty() << std::endl;
 
   // mophology : open and close
   mophology(out_filter_img, out_filter_img, params_config_.ellipse_size);

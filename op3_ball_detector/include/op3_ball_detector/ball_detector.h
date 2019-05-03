@@ -151,6 +151,7 @@ class BallDetector
   int h_range_;
   int s_range_;
   int v_range_;
+  int num_call_;
 
   // web setting
   std::string default_setting_path_;
