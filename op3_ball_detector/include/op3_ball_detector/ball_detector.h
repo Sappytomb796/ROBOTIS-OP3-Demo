@@ -20,6 +20,7 @@
 #define _BALL_DETECTOR_H_
 
 #include <string>
+#include <math.h>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -88,7 +89,10 @@ class BallDetector
   bool switchDetectionCallback(op3_ball_detector::SwitchDetection::Request &req, op3_ball_detector::SwitchDetection::Response &res);
 
   bool loadDetectionSettings();
-  void applyDetectionSettings(); // types TBD
+  void applyDetectionSettings();
+  void updateHSV(int h, int s, int v);
+  void convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut);
+  void convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut);
 
   void resetParameter();
   void publishParam();
@@ -143,6 +147,11 @@ class BallDetector
   BallColorConfig params_color_;
   std::string color_config_path_;
   bool has_color_config_;
+
+  int h_range_;
+  int s_range_;
+  int v_range_;
+  int num_call_;
 
   // web setting
   std::string default_setting_path_;

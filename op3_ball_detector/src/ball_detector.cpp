@@ -73,9 +73,6 @@ BallDetector::BallDetector()
   nh_.param<int>("ellipse_size", detect_config.ellipse_size, params_config_.ellipse_size);
   nh_.param<bool>("filter_debug", detect_config.debug, params_config_.debug);
 
-  params_color_.name = "";
-  params_color_.test_val = 0;
-
   //sets publishers
   image_pub_ = it_.advertise("image_out", 100);
   circles_pub_ = nh_.advertise<op3_ball_detector::CircleSetStamped>("circle_set", 100);
@@ -95,6 +92,11 @@ BallDetector::BallDetector()
 
   // color configure
   color_config_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/config/red_ball_config.yaml";
+  h_range_ = 140;
+  s_range_ = 40;
+  v_range_ = 100;
+  switch_detection_flag_ = false;
+  num_call_ = 0;
 
   // web setting
   param_pub_ = nh_.advertise<op3_ball_detector::BallDetectorParams>("current_params", 1);
@@ -135,18 +137,14 @@ void BallDetector::process()
   if (enable_ == false)
     return;
 
-  switch_detection_flag_ = true;
-
-  if (switch_detection_flag_ == true)
+  if (switch_detection_flag_ == true && 50 <= num_call_++)
   {
-    loadDetectionSettings();
+    num_call_ = 0;
+    std::cout << "ENTERED" << std::endl;
     applyDetectionSettings();
-    std::cout << "\n\nIN PROCESS\n";
-    printConfig();
   }
 
-  applyDetectionSettings();
-  printConfig();
+  //printConfig();
 
   if (cv_img_ptr_sub_ != NULL)
   {
@@ -157,6 +155,8 @@ void BallDetector::process()
 
     // image filtering
     filterImage(img_hsv, img_filtered);
+
+    //std::cout << "TEST: " << img_filtered.empty() << std::endl;
 
     //detect circles
     houghDetection2(img_filtered);
@@ -373,7 +373,9 @@ bool BallDetector::saveImageCallback(op3_ball_detector::SaveImage::Request &req,
 {
   std::string filename = "/home/robotis/" + req.params.name + ".png";
   if (cv_img_ptr_sub_ != NULL) {
-    if (cv::imwrite(filename, cv_img_ptr_sub_->image) == false) {
+    cv::Mat out_image;
+    cv::cvtColor(cv_img_ptr_sub_->image, out_image, cv::COLOR_RGB2BGR);
+    if (cv::imwrite(filename, out_image) == false) {
       res.returns.name = "Failed for some reason";
     }
     else {
@@ -407,12 +409,15 @@ bool BallDetector::switchDetectionCallback(op3_ball_detector::SwitchDetection::R
 
 bool BallDetector::loadDetectionSettings()
 {
+  std::cout << "Loading detection settings..." << std::endl << std::endl;
   try
   {
     YAML::Node config = YAML::LoadFile(color_config_path_.c_str());
 
-    params_color_.name = config["name"].as<std::string>();
-    params_color_.test_val = config["test_val"].as<int>();
+    params_color_.x_min = config["x_min"].as<int>();
+    params_color_.x_max = config["x_max"].as<int>();
+    params_color_.light_slope = config["light_slope"].as<double>();
+    params_color_.light_constant = config["light_constant"].as<double>();
     has_color_config_ = true;
   }
    catch (const std::exception& e)
@@ -428,7 +433,131 @@ void BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
     return;
-  params_config_.filter_threshold.h_min = params_color_.test_val;
+  int h, s, v, g, b;
+  int R = params_color_.getMedianRVal(params_color_.sampleLightVal());
+  g = 0;
+  b = 0;
+
+  double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
+  double avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min ) / 2;
+  double avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min ) / 2;
+
+//   convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
+  convertRGBtoHSV(R, g, b, h, s, v);
+
+  std::cout << "Updating HSV to (" << h << ", " << s << ", " << v << ")" << std::endl;
+
+  updateHSV(h, s, v);
+  publishParam();
+  //saveConfig();
+}
+
+void BallDetector::updateHSV(int h, int s, int v)
+{
+  params_config_.filter_threshold.h_min = h + h_range_ / 2;  // min is the larger number for some reason
+  params_config_.filter_threshold.h_max = h - h_range_ / 2;
+  params_config_.filter_threshold.s_max = s + s_range_ / 2;
+  params_config_.filter_threshold.s_min = s - s_range_ / 2;
+  params_config_.filter_threshold.v_max = v + v_range_ / 2;
+  params_config_.filter_threshold.v_min = v - v_range_ / 2;
+
+  params_config_.filter_threshold.h_min = std::min(params_config_.filter_threshold.h_min, 360);
+  params_config_.filter_threshold.h_max = std::max(params_config_.filter_threshold.h_max, 0);
+  params_config_.filter_threshold.s_min = std::max(params_config_.filter_threshold.s_min, 0);
+  params_config_.filter_threshold.s_max = std::min(params_config_.filter_threshold.s_max, 255);
+  params_config_.filter_threshold.v_min = std::max(params_config_.filter_threshold.v_min, 0);
+  params_config_.filter_threshold.v_max = std::min(params_config_.filter_threshold.v_max, 255);
+
+  std::cout << "VALS:	" << params_config_.filter_threshold.h_min << "	"
+		<< params_config_.filter_threshold.h_max << "	"
+		<< params_config_.filter_threshold.s_max << "	"
+		<< params_config_.filter_threshold.s_min << "	"
+		<< params_config_.filter_threshold.v_max << "	"
+		<< params_config_.filter_threshold.v_min << std::endl << std::endl;
+
+  // printConfig();
+}
+
+void BallDetector::convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut)
+{
+  double scaledS = s / 255;
+  double scaledV = v / 255;
+
+  double C = scaledV * scaledS;
+  double X = C * (1 - std::abs(fmod((h / 60) , 2) - 1));
+  double m = scaledV - C;
+
+/*
+  std::cout << "H : " << h << std::endl;
+  std::cout << "S : " << scaledS << std::endl;
+  std::cout << "V : " << scaledV << std::endl;
+  std::cout << "C : " << C << std::endl;
+  std::cout << "X : " << X << std::endl;
+  std::cout << "M : " << m << std::endl;
+*/
+
+  double r, g, b;
+
+  if(h < 60){
+    r = C;
+    g = X;
+    b = 0;
+  } else if(h < 120){
+    r = X;
+    g = C;
+    b = 0;
+  } else if(h < 180){
+    r = 0;
+    g = C;
+    b = X;
+  } else if(h < 240){
+    r = 0;
+    g = X;
+    b = C;
+  } else if(h < 300){
+    r = X;
+    g = 0;
+    b = C;
+  } else {
+    r = C;
+    g = 0;
+    b = X;
+  }
+
+  rOut = (r + m) * 255;
+  gOut = (g + m) * 255;
+  bOut = (b + m) * 255;
+}
+
+void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut)
+{
+  double rScaled = (double)r / 255;
+  double gScaled = (double)g / 255;
+  double bScaled = (double)b / 255;
+
+  std::cout << "r " << r << " g " << g << " b " << b << std::endl;
+  std::cout << "rS " << rScaled << " gS " << gScaled << " bS " << bScaled << std::endl;
+
+  double Cmax = std::max(std::max(rScaled, gScaled), bScaled);
+  double Cmin = std::min(std::min(rScaled, gScaled), bScaled);
+  double delta = Cmax - Cmin;
+
+  double val = ((rScaled - gScaled) / delta) + 4.0;
+
+  if(delta == 0){
+    hOut = 0;
+  } else if(Cmax == rScaled){
+    hOut = 60 * (fmod(((gScaled - bScaled) / delta) , 6));
+  } else if(Cmax == gScaled){
+    hOut = 60 * (((bScaled - rScaled) / delta) + 2);
+  } else if(Cmax == bScaled){
+    hOut = 60 * (((rScaled - gScaled) / delta) + 4);
+  }
+
+  std::cout << "MAX: " << Cmax << " MIN " << Cmin << std::endl;
+  sOut = Cmax ? (delta / Cmax) * 255 : 0;
+
+  vOut = Cmax * 255;
 }
 
 void BallDetector::resetParameter()
@@ -534,9 +663,11 @@ void BallDetector::printConfig()
             << params_config_.ellipse_size << std::endl << "    filter_image_to_debug: " << params_config_.debug
             << std::endl << std::endl;
 
-  std::cout << "Test Configuration:" << std::endl << "    name: "
-            << params_color_.name << std::endl << "    test_val: "
-            << params_color_.test_val << std::endl;
+  std::cout << "Ball color Configuration:" << std::endl << "    x_min: "
+            << params_color_.x_min << std::endl << "    x_max: "
+            << params_color_.x_max << std::endl << "    light_slope: "
+            << params_color_.light_slope << std::endl << "    light_constant: "
+            << params_color_.light_constant << std::endl << std::endl;
 }
 
 void BallDetector::saveConfig()
@@ -639,6 +770,8 @@ void BallDetector::filterImage(const cv::Mat &in_filter_img, cv::Mat &out_filter
     return;
 
   inRangeHsv(in_filter_img, params_config_.filter_threshold, out_filter_img);
+
+  //std::cout << "OTHER TEST: " << out_filter_img.empty() << std::endl;
 
   // mophology : open and close
   mophology(out_filter_img, out_filter_img, params_config_.ellipse_size);
@@ -762,7 +895,7 @@ void BallDetector::inRangeHsv(const cv::Mat &input_img, const HsvFilter &filter_
   {
     cv::Scalar min_value = cv::Scalar(scaled_hue_min, filter_value.s_min, filter_value.v_min, 0);
     cv::Scalar max_value = cv::Scalar(scaled_hue_max, filter_value.s_max, filter_value.v_max, 0);
-
+  //TODO: Can check output image to see if ball color detected?
     cv::inRange(input_img, min_value, max_value, output_img);
   }
   else
