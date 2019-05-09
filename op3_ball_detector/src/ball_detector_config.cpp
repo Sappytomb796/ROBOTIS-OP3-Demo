@@ -21,14 +21,29 @@
 namespace robotis_op
 {
 
+BallColorConfig::BallColorConfig()
+    : x_min(X_MIN_DEFAULT),
+      x_max(X_MAX_DEFAULT),
+      light_slope(LIGHT_SLOPE_DEFAULT),
+      light_constant(LIGHT_CONSTANT_DEFAULT)
+  {
+    std::random_device rd;
+    gen.seed(rd);
+  }
+
 int BallColorConfig::sampleLightVal()
 {
-    return rand() % x_max + x_min;
+    return light_distribution(gen);
 }
 
 int BallColorConfig::getMedianRVal(int x_val)
 {
     return light_slope * x_val + light_constant;
+}
+
+void BallColorConfig::updateDistribution(std::vector<int> light_range, std::vector<int> range_weights)
+{
+    light_distribution.param({light_range.begin(), light_range.end(), range_weights.begin()});
 }
 
 }

@@ -21,6 +21,9 @@
 
 #include <ctime>
 #include <stdlib.h>
+#include <vector>
+#include <random>
+
 
 namespace robotis_op
 {
@@ -111,22 +114,19 @@ class DetectorConfig
 class BallColorConfig
 {
  public:
-  BallColorConfig()
-    : x_min(X_MIN_DEFAULT),
-      x_max(X_MAX_DEFAULT),
-      light_slope(LIGHT_SLOPE_DEFAULT),
-      light_constant(LIGHT_CONSTANT_DEFAULT)
-  {
-    srand(time(NULL));
-  }
+  BallColorConfig();
   
   int sampleLightVal();
   int getMedianRVal(int x_val);
+  void updateDistribution(std::vector<int> light_range, std::vector<int> range_weights);
 
   int x_min;
   int x_max;
   double light_slope;
   double light_constant;
+ private:
+  std::mt19937 gen;
+  std::piecewise_constant_distribution<double> light_distribution;
 };
 
 }
