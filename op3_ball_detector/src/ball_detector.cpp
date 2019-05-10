@@ -134,6 +134,7 @@ bool BallDetector::newImage()
 
 void BallDetector::process()
 {
+  int light_val = 0;
   if (enable_ == false)
     return;
 
@@ -141,10 +142,8 @@ void BallDetector::process()
   {
     num_call_ = 0;
     std::cout << "ENTERED" << std::endl;
-    applyDetectionSettings();
+    light_val = applyDetectionSettings();
   }
-
-  //printConfig();
 
   if (cv_img_ptr_sub_ != NULL)
   {
@@ -429,12 +428,14 @@ bool BallDetector::loadDetectionSettings()
   return true;
 }
 
-void BallDetector::applyDetectionSettings()
+int BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
-    return;
+    return -1;
   int h, s, v, g, b;
-  int R = params_color_.getMedianRVal(params_color_.sampleLightVal());
+
+  int light_val = params_color_.sampleLightVal();
+  int R = params_color_.getMedianRVal(light_val);
   g = 0;
   b = 0;
 
@@ -450,6 +451,7 @@ void BallDetector::applyDetectionSettings()
   updateHSV(h, s, v);
   publishParam();
   //saveConfig();
+  return light_val;
 }
 
 void BallDetector::updateHSV(int h, int s, int v)

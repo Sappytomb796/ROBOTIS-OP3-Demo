@@ -31,4 +31,9 @@ int BallColorConfig::getMedianRVal(int x_val)
     return light_slope * x_val + light_constant;
 }
 
+int BallColorConfig::updateDistribution(std::vector<double> light_range, std::vector<double> range_weights, int light_val)
+{
+    return 0;
+}
+
 }

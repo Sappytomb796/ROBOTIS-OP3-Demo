@@ -21,6 +21,7 @@
 
 #include <ctime>
 #include <stdlib.h>
+#include <vector>
 
 namespace robotis_op
 {
@@ -122,6 +123,7 @@ class BallColorConfig
   
   int sampleLightVal();
   int getMedianRVal(int x_val);
+  int updateDistribution(std::vector<double> light_range, std::vector<double> range_weights, int light_val);
 
   int x_min;
   int x_max;
