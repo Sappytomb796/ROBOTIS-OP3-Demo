@@ -98,6 +98,11 @@ BallDetector::BallDetector()
   switch_detection_flag_ = false;
   num_call_ = 0;
 
+  for(int i = 0; i < NUM_INTERVALS - 1; i++)
+  {
+    range_weights_.push(0);
+  }
+
   // web setting
   param_pub_ = nh_.advertise<op3_ball_detector::BallDetectorParams>("current_params", 1);
   param_command_sub_ = nh_.subscribe("param_command", 1, &BallDetector::paramCommandCallback, this);
@@ -142,6 +147,14 @@ void BallDetector::process()
     num_call_ = 0;
     std::cout << "ENTERED" << std::endl;
     applyDetectionSettings();
+    std::cout << "weights:  (";
+    for(auto i = range_weights_.begin(); i != range_weights_.end(); i++)
+    {
+      if(i != range_weights_.begin())
+        std::cout << " ,";
+      std::cout << *i;
+    }
+    std::cout << ")" << std::endl;
   }
 
   //printConfig();
@@ -419,6 +432,13 @@ bool BallDetector::loadDetectionSettings()
     params_color_.light_slope = config["light_slope"].as<double>();
     params_color_.light_constant = config["light_constant"].as<double>();
     has_color_config_ = true;
+
+    params_color_.range = x_max - x_min;
+    double subrange = params_color_.range / NUM_INTERVALS;
+    for(double i = params_color_.x_min; i < params_color_.x_max; i+=subrange)
+    {
+      light_range_.push(i);
+    }
   }
    catch (const std::exception& e)
   {
@@ -434,22 +454,27 @@ void BallDetector::applyDetectionSettings()
   if(!has_color_config_)
     return;
   int h, s, v, g, b;
-  int R = params_color_.getMedianRVal(params_color_.sampleLightVal());
+  int light_val = params_color_.sampleLightVal();
+  int R = params_color_.getMedianRVal(light_val);
   g = 0;
   b = 0;
+
+  if(light_val < 3000 && light_val > 2000)  // Test range
+  {
+    range_weights[light_val / (params_color_.range / NUM_INTERVALS)]++;
+    params_color_.updateDistribution(light_range_, range_weights_);
+  }
 
   double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
   double avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min ) / 2;
   double avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min ) / 2;
 
-//   convertHSVtoRGB(avgH, avgS, avgV, r, g, b);
   convertRGBtoHSV(R, g, b, h, s, v);
 
   std::cout << "Updating HSV to (" << h << ", " << s << ", " << v << ")" << std::endl;
 
   updateHSV(h, s, v);
   publishParam();
-  //saveConfig();
 }
 
 void BallDetector::updateHSV(int h, int s, int v)

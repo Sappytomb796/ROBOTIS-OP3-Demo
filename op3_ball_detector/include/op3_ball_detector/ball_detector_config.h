@@ -52,6 +52,7 @@ const int X_MIN_DEFAULT = 0;
 const int X_MAX_DEFAULT = 4000;
 const double LIGHT_SLOPE_DEFAULT = 1;
 const double LIGHT_CONSTANT_DEFAULT = 0;
+const int NUM_INTERVALS = 10; // test at 10
 
 class HsvFilter
 {
@@ -118,15 +119,16 @@ class BallColorConfig
   
   int sampleLightVal();
   int getMedianRVal(int x_val);
-  void updateDistribution(std::vector<int> light_range, std::vector<int> range_weights);
+  void updateDistribution(std::vector<double> light_range, std::vector<double> range_weights);
 
   int x_min;
   int x_max;
   double light_slope;
   double light_constant;
+  double range;
  private:
   std::mt19937 gen;
-  std::piecewise_constant_distribution<double> light_distribution;
+  std::piecewise_constant_distribution<> light_distribution;
 };
 
 }

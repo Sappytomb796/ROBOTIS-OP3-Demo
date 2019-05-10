@@ -21,7 +21,6 @@
 
 #include <string>
 #include <math.h>
-#include <vector>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -148,7 +147,8 @@ class BallDetector
   BallColorConfig params_color_;
   std::string color_config_path_;
   bool has_color_config_;
-  std::vector<int> light_weights_;
+  std::vector<double> light_range_;
+  std::vector<double> range_weights_;
 
   int h_range_;
   int s_range_;
