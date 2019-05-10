@@ -159,6 +159,12 @@ void BallDetector::process()
 
     //detect circles
     houghDetection2(img_filtered);
+  
+    // was the detection valid?
+    if (goodDetectionMode()) {
+      std::cout << "Good detection mode for " << light_val << std::endl;
+      params_color_.updateDistribution(light_range_, light_weights_, light_val);
+    }
 
 //    // set input image
 //    setInputImage(cv_img_ptr_sub_->image);
@@ -560,6 +566,17 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
   sOut = Cmax ? (delta / Cmax) * 255 : 0;
 
   vOut = Cmax * 255;
+}
+
+bool BallDetector::goodDetectionMode()
+{
+  std::cout << "NUMBER OF CIRCLES: " << circles_.size() << std::endl;
+  if (circles_.size() > 1) 
+    return false; // If there is more than one circle, this can't be a good detection mode
+  else if (circles_.empty())    
+    return false; // If there are no circles after detection, it's not 
+  else 
+    return true;  // Otherwise, exactly one circle indicates probably a pretty good detection mode 
 }
 
 void BallDetector::resetParameter()

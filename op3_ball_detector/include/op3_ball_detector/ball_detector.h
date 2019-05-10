@@ -94,6 +94,8 @@ class BallDetector
   void convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut);
   void convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut);
 
+  bool goodDetectionMode();
+
   void resetParameter();
   void publishParam();
 
@@ -147,6 +149,8 @@ class BallDetector
   BallColorConfig params_color_;
   std::string color_config_path_;
   bool has_color_config_;
+  std::vector<double> light_range_;
+  std::vector<double> light_weights_;
 
   int h_range_;
   int s_range_;
