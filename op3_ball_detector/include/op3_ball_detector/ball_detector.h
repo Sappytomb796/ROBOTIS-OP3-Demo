@@ -48,6 +48,9 @@
 #include "op3_ball_detector/SaveImage.h"
 #include "op3_ball_detector/SwitchDetection.h"
 
+#include <map>
+#include <deque>
+
 namespace robotis_op
 {
 
@@ -113,6 +116,8 @@ class BallDetector
   void houghDetection2(const cv::Mat &input_hough);
   void drawOutputImage();
 
+  std::deque<int> last_vals_;
+  std::map<int, int> counter_;
   //ros node handle
   ros::NodeHandle nh_;
 

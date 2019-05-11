@@ -116,15 +116,15 @@ class BallColorConfig
 {
  public:
   BallColorConfig();
-  BallColorConfig
-  (
-    int x_min,
-    int x_max,
-    double light_slope,
-    double light_constant,
-    std::vector<double> light_range, 
-    std::vector<double> range_weights
-  );
+  // BallColorConfig
+  // (
+  //   int x_min,
+  //   int x_max,
+  //   double light_slope,
+  //   double light_constant,
+  //   std::vector<double> light_range, 
+  //   std::vector<double> range_weights
+  // );
   
   int sampleLightVal();
   int getMedianRVal(int x_val);

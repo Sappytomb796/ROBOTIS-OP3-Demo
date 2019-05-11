@@ -100,7 +100,7 @@ BallDetector::BallDetector()
 
   for(int i = 0; i < NUM_INTERVALS - 1; i++)
   {
-    range_weights_.push_back(0);
+    range_weights_.push_back(1);
   }
 
   // web setting
@@ -430,24 +430,26 @@ bool BallDetector::loadDetectionSettings()
   {
     YAML::Node config = YAML::LoadFile(color_config_path_.c_str());
 
-    int x_min = config["x_min"].as<int>();
-    int x_max = config["x_max"].as<int>();
-    double light_slope = config["light_slope"].as<double>();
-    double light_constant = config["light_constant"].as<double>();
+    params_color_.x_min = config["x_min"].as<int>();
+    params_color_.x_max = config["x_max"].as<int>();
+    params_color_.light_slope = config["light_slope"].as<double>();
+    params_color_.light_constant = config["light_constant"].as<double>();
     has_color_config_ = true;
-
-    BallColorConfig color_config(x_min, x_max, light_slope, light_constant, light_range_, range_weights_);
-
-    params_color_ = color_config;
-
-    std::cout << "HI: " << params_color_.x_max << std::endl;
 
     params_color_.range = params_color_.x_max - params_color_.x_min;
     double subrange = params_color_.range / NUM_INTERVALS;
     for(double i = params_color_.x_min; i < params_color_.x_max; i+=subrange)
     {
+      std::cout << "YAR: " << i << std::endl;
       light_range_.push_back(i);
     }
+
+    params_color_.updateDistribution(light_range_, range_weights_);
+
+    // BallColorConfig color_config(x_min, x_max, light_slope, light_constant, light_range_, range_weights_);
+
+    // params_color_ = color_config;
+
   }
    catch (const std::exception& e)
   {
@@ -464,14 +466,36 @@ void BallDetector::applyDetectionSettings()
     return;
   int h, s, v, g, b;
   int light_val = params_color_.sampleLightVal();
+  last_vals_.push_back(int((light_val - params_color_.x_min) / (params_color_.range / NUM_INTERVALS)));
+  ++counter_[int((light_val - params_color_.x_min) / (params_color_.range / NUM_INTERVALS))];
+  if(last_vals_.size() > 50)
+  {
+    int oldest = last_vals_.front();
+    last_vals_.pop_front();
+    --counter_[oldest];
+  }
+  double percent_in_range = 0.0f;
+  double sum = 0;
+  for(std::map<int, int>::iterator i = counter_.begin(); i != counter_.end(); i++)
+  {
+    sum += i->second;
+  }
+  if(counter_[4] != 0 || counter_[5] != 0)
+    percent_in_range = ((counter_[4] + counter_[5]) / sum) * 100;
+  else
+    percent_in_range = 0.0f;
+
+  std::cout << "IN RANGE:   " << percent_in_range << "%" << std::endl;
+
   std::cout << "LIGHTVAL: " << light_val << std::endl;
   int R = params_color_.getMedianRVal(light_val);
   g = 0;
   b = 0;
 
-  if(light_val < 3000 && light_val > 2000)  // Test range
+  if(light_val < 2600 && light_val > 2500)  // Test range
   {
-    range_weights_[light_val / (params_color_.range / NUM_INTERVALS)]++;
+    std::cout << "TEST: " << int((light_val - params_color_.x_min) / (params_color_.range / NUM_INTERVALS)) << std::endl;
+    range_weights_[int((light_val - params_color_.x_min) / (params_color_.range / NUM_INTERVALS))]++;
     params_color_.updateDistribution(light_range_, range_weights_);
   }
 
