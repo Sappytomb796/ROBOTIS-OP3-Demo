@@ -100,7 +100,7 @@ BallDetector::BallDetector()
 
   for(int i = 0; i < NUM_INTERVALS - 1; i++)
   {
-    range_weights_.push(0);
+    range_weights_.push_back(0);
   }
 
   // web setting
@@ -116,6 +116,7 @@ BallDetector::BallDetector()
   params_config_ = detect_config;
   init_param_ = true;
   printConfig();
+  loadDetectionSettings();
   process();
 }
 
@@ -142,7 +143,9 @@ void BallDetector::process()
   if (enable_ == false)
     return;
 
-  if (switch_detection_flag_ == true && 50 <= num_call_++)
+  switch_detection_flag_ = true;
+
+  if (switch_detection_flag_ == true && 50 >= num_call_++)
   {
     num_call_ = 0;
     std::cout << "ENTERED" << std::endl;
@@ -427,17 +430,23 @@ bool BallDetector::loadDetectionSettings()
   {
     YAML::Node config = YAML::LoadFile(color_config_path_.c_str());
 
-    params_color_.x_min = config["x_min"].as<int>();
-    params_color_.x_max = config["x_max"].as<int>();
-    params_color_.light_slope = config["light_slope"].as<double>();
-    params_color_.light_constant = config["light_constant"].as<double>();
+    int x_min = config["x_min"].as<int>();
+    int x_max = config["x_max"].as<int>();
+    double light_slope = config["light_slope"].as<double>();
+    double light_constant = config["light_constant"].as<double>();
     has_color_config_ = true;
 
-    params_color_.range = x_max - x_min;
+    BallColorConfig color_config(x_min, x_max, light_slope, light_constant, light_range_, range_weights_);
+
+    params_color_ = color_config;
+
+    std::cout << "HI: " << params_color_.x_max << std::endl;
+
+    params_color_.range = params_color_.x_max - params_color_.x_min;
     double subrange = params_color_.range / NUM_INTERVALS;
     for(double i = params_color_.x_min; i < params_color_.x_max; i+=subrange)
     {
-      light_range_.push(i);
+      light_range_.push_back(i);
     }
   }
    catch (const std::exception& e)
@@ -455,13 +464,14 @@ void BallDetector::applyDetectionSettings()
     return;
   int h, s, v, g, b;
   int light_val = params_color_.sampleLightVal();
+  std::cout << "LIGHTVAL: " << light_val << std::endl;
   int R = params_color_.getMedianRVal(light_val);
   g = 0;
   b = 0;
 
   if(light_val < 3000 && light_val > 2000)  // Test range
   {
-    range_weights[light_val / (params_color_.range / NUM_INTERVALS)]++;
+    range_weights_[light_val / (params_color_.range / NUM_INTERVALS)]++;
     params_color_.updateDistribution(light_range_, range_weights_);
   }
 
@@ -493,14 +503,6 @@ void BallDetector::updateHSV(int h, int s, int v)
   params_config_.filter_threshold.v_min = std::max(params_config_.filter_threshold.v_min, 0);
   params_config_.filter_threshold.v_max = std::min(params_config_.filter_threshold.v_max, 255);
 
-  std::cout << "VALS:	" << params_config_.filter_threshold.h_min << "	"
-		<< params_config_.filter_threshold.h_max << "	"
-		<< params_config_.filter_threshold.s_max << "	"
-		<< params_config_.filter_threshold.s_min << "	"
-		<< params_config_.filter_threshold.v_max << "	"
-		<< params_config_.filter_threshold.v_min << std::endl << std::endl;
-
-  // printConfig();
 }
 
 void BallDetector::convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut)
@@ -511,15 +513,6 @@ void BallDetector::convertHSVtoRGB(double h, double s, double v, int &rOut, int 
   double C = scaledV * scaledS;
   double X = C * (1 - std::abs(fmod((h / 60) , 2) - 1));
   double m = scaledV - C;
-
-/*
-  std::cout << "H : " << h << std::endl;
-  std::cout << "S : " << scaledS << std::endl;
-  std::cout << "V : " << scaledV << std::endl;
-  std::cout << "C : " << C << std::endl;
-  std::cout << "X : " << X << std::endl;
-  std::cout << "M : " << m << std::endl;
-*/
 
   double r, g, b;
 
@@ -560,9 +553,6 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
   double gScaled = (double)g / 255;
   double bScaled = (double)b / 255;
 
-  std::cout << "r " << r << " g " << g << " b " << b << std::endl;
-  std::cout << "rS " << rScaled << " gS " << gScaled << " bS " << bScaled << std::endl;
-
   double Cmax = std::max(std::max(rScaled, gScaled), bScaled);
   double Cmin = std::min(std::min(rScaled, gScaled), bScaled);
   double delta = Cmax - Cmin;
@@ -579,7 +569,6 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
     hOut = 60 * (((rScaled - gScaled) / delta) + 4);
   }
 
-  std::cout << "MAX: " << Cmax << " MIN " << Cmin << std::endl;
   sOut = Cmax ? (delta / Cmax) * 255 : 0;
 
   vOut = Cmax * 255;
