@@ -30,31 +30,18 @@ BallColorConfig::BallColorConfig()
 {
     std::random_device rd;
     gen.seed(rd());
-    // light_distribution.param(std::piecewise_constant_distribution<>::param_type({}));
+    srand(time(NULL));
 }
-
-// BallColorConfig::BallColorConfig
-//     (
-//         int x_min,
-//         int x_max,
-//         double light_slope,
-//         double light_constant,
-//         std::vector<double> light_range, 
-//         std::vector<double> range_weights
-//     )
-//     : x_min(x_min),
-//       x_max(x_max),
-//       light_slope(light_slope),
-//       light_constant(light_constant)
-// {
-//     std::random_device rd;
-//     gen.seed(rd());
-//     updateDistribution(light_range, range_weights);
-// }
 
 int BallColorConfig::sampleLightVal()
 {
-    std::cout << "WUT: " << light_distribution(gen) << std::endl;
+    // Small chance to sample value outside of the distribution
+    // to avoid getting stuck in maximum
+    if((rand() % 100) <= (RANDOM_SAMPLE_CHANCE * 100))
+    {
+        std::cout << "BOO!" << std::endl;
+        return rand() % (x_max + x_min);
+    }
     return light_distribution(gen);
 }
 
@@ -63,9 +50,14 @@ int BallColorConfig::getMedianRVal(int x_val)
     return light_slope * x_val + light_constant;
 }
 
-void BallColorConfig::updateDistribution(std::vector<double> light_range, std::vector<double> range_weights)
+void BallColorConfig::updateDistribution(std::vector<double> light_range, std::vector<double> light_weights)
 {
-    light_distribution.param(std::piecewise_constant_distribution<>::param_type(light_range.begin(), light_range.end(), range_weights.begin()));
+    light_distribution.param(std::piecewise_constant_distribution<>::param_type(light_range.begin(), light_range.end(), light_weights.begin()));
+}
+
+void BallColorConfig::adjustWeightsWithLightVal(int light_val, std::vector<double> &light_weights)
+{
+    light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))]++;    
 }
 
 }

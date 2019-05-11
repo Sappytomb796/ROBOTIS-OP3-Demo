@@ -116,8 +116,11 @@ class BallDetector
   void houghDetection2(const cv::Mat &input_hough);
   void drawOutputImage();
 
+  //to test the distribution outputs
+  void testDistributionPercent(int light_val, int range, int x_min, int x_max);
   std::deque<int> last_vals_;
   std::map<int, int> counter_;
+
   //ros node handle
   ros::NodeHandle nh_;
 
@@ -153,12 +156,12 @@ class BallDetector
   std::string color_config_path_;
   bool has_color_config_;
   std::vector<double> light_range_;
-  std::vector<double> range_weights_;
+  std::vector<double> light_weights_;
+  int last_light_val_;
 
   int h_range_;
   int s_range_;
   int v_range_;
-  int num_call_;
 
   // web setting
   std::string default_setting_path_;
