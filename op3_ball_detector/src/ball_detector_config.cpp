@@ -40,7 +40,7 @@ int BallColorConfig::sampleLightVal()
     if((rand() % 100) <= (RANDOM_SAMPLE_CHANCE * 100))
     {
         std::cout << "BOO!" << std::endl;
-        return rand() % (x_max + x_min);
+        return rand() % x_max + x_min;
     }
     return light_distribution(gen);
 }
@@ -57,6 +57,7 @@ void BallColorConfig::updateDistribution(std::vector<double> light_range, std::v
 
 void BallColorConfig::adjustWeightsWithLightVal(int light_val, int adjust_val, std::vector<double> &light_weights)
 {
+    std::cout << "LIGHT VAL: " << light_val << std::endl;
     if(light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))] + adjust_val > 0)
         light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))] += adjust_val;
     else

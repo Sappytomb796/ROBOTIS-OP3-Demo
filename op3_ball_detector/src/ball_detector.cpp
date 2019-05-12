@@ -30,8 +30,7 @@ BallDetector::BallDetector()
     params_config_(),
     init_param_(false),
     not_found_count_(0),
-    switch_detection_flag_(false),
-    last_light_val_(X_MIN_DEFAULT)
+    switch_detection_flag_(false)
 {
   has_path_ = nh_.getParam("yaml_path", param_path_);
   has_color_config_ = nh_.getParam("color_path", color_config_path_);
@@ -139,6 +138,7 @@ bool BallDetector::newImage()
 
 void BallDetector::process()
 {
+  int light_val = 0;
   if (enable_ == false)
     return;
 
@@ -146,7 +146,7 @@ void BallDetector::process()
 
   if (switch_detection_flag_ == true)
   {
-    applyDetectionSettings();
+    light_val = applyDetectionSettings();
     std::cout << "weights:  (";
     for(auto i = light_weights_.begin(); i != light_weights_.end(); i++)
     {
@@ -156,8 +156,6 @@ void BallDetector::process()
     }
     std::cout << ")" << std::endl;
   }
-
-  //printConfig();
 
   if (cv_img_ptr_sub_ != NULL)
   {
@@ -171,6 +169,15 @@ void BallDetector::process()
 
     //detect circles
     houghDetection2(img_filtered);
+  
+    // was the detection valid?
+    if (goodDetectionMode()) {
+      std::cout << "Good detection mode for " << light_val << std::endl;
+      params_color_.adjustWeightsWithLightVal(light_val, 4, light_weights_);
+    } else {
+      params_color_.adjustWeightsWithLightVal(light_val, -1, light_weights_);
+    }
+    params_color_.updateDistribution(light_range_, light_weights_);
 
 //    // set input image
 //    setInputImage(cv_img_ptr_sub_->image);
@@ -482,28 +489,28 @@ void BallDetector::testDistributionPercent(int light_val, int range, int x_min, 
   std::cout << "IN RANGE:   " << percent_in_range << "%" << std::endl;
 }
 
-void BallDetector::applyDetectionSettings()
+int BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
-    return;
+    return -1;
   int h, s, v, g, b;
 
-  last_light_val_ = params_color_.sampleLightVal();
 
-  testDistributionPercent(last_light_val_, 50, 2500, 2600);
-
-  int R = params_color_.getMedianRVal(last_light_val_);
+  int light_val = params_color_.sampleLightVal();
+  int R = params_color_.getMedianRVal(light_val);
   g = 0;
   b = 0;
 
+  testDistributionPercent(light_val, 50, 2500, 2600);
+
   // Test range. To be replaced by Vision -- Create System for Determining When To Affect Weighted Sampling
-  if(last_light_val_ < 2600 && last_light_val_ > 2500)
+  if(light_val < 2600 && light_val > 2500)
   {
-    params_color_.adjustWeightsWithLightVal(last_light_val_, 4, light_weights_);
+    params_color_.adjustWeightsWithLightVal(light_val, 4, light_weights_);
   } 
   else 
   {
-    params_color_.adjustWeightsWithLightVal(last_light_val_, -1, light_weights_);
+    params_color_.adjustWeightsWithLightVal(light_val, -1, light_weights_);
   }
 
   params_color_.updateDistribution(light_range_, light_weights_);
@@ -518,6 +525,7 @@ void BallDetector::applyDetectionSettings()
 
   updateHSV(h, s, v);
   publishParam();
+  return light_val;
 }
 
 void BallDetector::updateHSV(int h, int s, int v)
@@ -605,6 +613,17 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
   sOut = Cmax ? (delta / Cmax) * 255 : 0;
 
   vOut = Cmax * 255;
+}
+
+bool BallDetector::goodDetectionMode()
+{
+  std::cout << "NUMBER OF CIRCLES: " << circles_.size() << std::endl;
+  if (circles_.size() > 1) 
+    return false; // If there is more than one circle, this can't be a good detection mode
+  else if (circles_.empty())    
+    return false; // If there are no circles after detection, it's not 
+  else 
+    return true;  // Otherwise, exactly one circle indicates probably a pretty good detection mode 
 }
 
 void BallDetector::resetParameter()
