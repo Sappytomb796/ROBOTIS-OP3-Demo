@@ -134,6 +134,7 @@ bool BallDetector::newImage()
 
 void BallDetector::process()
 {
+  int light_val = 0;
   if (enable_ == false)
     return;
 
@@ -141,10 +142,8 @@ void BallDetector::process()
   {
     num_call_ = 0;
     std::cout << "ENTERED" << std::endl;
-    applyDetectionSettings();
+    light_val = applyDetectionSettings();
   }
-
-  //printConfig();
 
   if (cv_img_ptr_sub_ != NULL)
   {
@@ -160,6 +159,12 @@ void BallDetector::process()
 
     //detect circles
     houghDetection2(img_filtered);
+  
+    // was the detection valid?
+    if (goodDetectionMode()) {
+      std::cout << "Good detection mode for " << light_val << std::endl;
+      params_color_.adjustWeightsWithLightVal(light_val, 1, light_weights_);
+    }
 
 //    // set input image
 //    setInputImage(cv_img_ptr_sub_->image);
@@ -429,12 +434,14 @@ bool BallDetector::loadDetectionSettings()
   return true;
 }
 
-void BallDetector::applyDetectionSettings()
+int BallDetector::applyDetectionSettings()
 {
   if(!has_color_config_)
-    return;
+    return -1;
   int h, s, v, g, b;
-  int R = params_color_.getMedianRVal(params_color_.sampleLightVal());
+
+  int light_val = params_color_.sampleLightVal();
+  int R = params_color_.getMedianRVal(light_val);
   g = 0;
   b = 0;
 
@@ -450,6 +457,7 @@ void BallDetector::applyDetectionSettings()
   updateHSV(h, s, v);
   publishParam();
   //saveConfig();
+  return light_val;
 }
 
 void BallDetector::updateHSV(int h, int s, int v)
@@ -558,6 +566,17 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
   sOut = Cmax ? (delta / Cmax) * 255 : 0;
 
   vOut = Cmax * 255;
+}
+
+bool BallDetector::goodDetectionMode()
+{
+  std::cout << "NUMBER OF CIRCLES: " << circles_.size() << std::endl;
+  if (circles_.size() > 1) 
+    return false; // If there is more than one circle, this can't be a good detection mode
+  else if (circles_.empty())    
+    return false; // If there are no circles after detection, it's not 
+  else 
+    return true;  // Otherwise, exactly one circle indicates probably a pretty good detection mode 
 }
 
 void BallDetector::resetParameter()
