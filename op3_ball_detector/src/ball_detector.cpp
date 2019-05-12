@@ -96,7 +96,6 @@ BallDetector::BallDetector()
   h_range_ = 140;
   s_range_ = 40;
   v_range_ = 100;
-  num_call_ = 0;
 
   for(int i = 0; i < NUM_INTERVALS - 1; i++)
   {
@@ -500,9 +499,14 @@ void BallDetector::applyDetectionSettings()
   // Test range. To be replaced by Vision -- Create System for Determining When To Affect Weighted Sampling
   if(last_light_val_ < 2600 && last_light_val_ > 2500)
   {
-    params_color_.adjustWeightsWithLightVal(last_light_val_, light_weights_);
-    params_color_.updateDistribution(light_range_, light_weights_);
+    params_color_.adjustWeightsWithLightVal(last_light_val_, 4, light_weights_);
+  } 
+  else 
+  {
+    params_color_.adjustWeightsWithLightVal(last_light_val_, -1, light_weights_);
   }
+
+  params_color_.updateDistribution(light_range_, light_weights_);
 
   double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
   double avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min ) / 2;

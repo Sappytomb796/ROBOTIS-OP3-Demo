@@ -55,9 +55,12 @@ void BallColorConfig::updateDistribution(std::vector<double> light_range, std::v
     light_distribution.param(std::piecewise_constant_distribution<>::param_type(light_range.begin(), light_range.end(), light_weights.begin()));
 }
 
-void BallColorConfig::adjustWeightsWithLightVal(int light_val, std::vector<double> &light_weights)
+void BallColorConfig::adjustWeightsWithLightVal(int light_val, int adjust_val, std::vector<double> &light_weights)
 {
-    light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))]++;    
+    if(light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))] + adjust_val > 0)
+        light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))] += adjust_val;
+    else
+        light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))] = 1;
 }
 
 }
