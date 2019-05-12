@@ -142,8 +142,6 @@ void BallDetector::process()
   if (enable_ == false)
     return;
 
-  switch_detection_flag_ = true;
-
   if (switch_detection_flag_ == true)
   {
     light_val = applyDetectionSettings();
@@ -504,16 +502,16 @@ int BallDetector::applyDetectionSettings()
   testDistributionPercent(light_val, 50, 2500, 2600);
 
   // Test range. To be replaced by Vision -- Create System for Determining When To Affect Weighted Sampling
-  if(light_val < 2600 && light_val > 2500)
-  {
-    params_color_.adjustWeightsWithLightVal(light_val, 4, light_weights_);
-  } 
-  else 
-  {
-    params_color_.adjustWeightsWithLightVal(light_val, -1, light_weights_);
-  }
+  // if(light_val < 2600 && light_val > 2500)
+  // {
+  //   params_color_.adjustWeightsWithLightVal(light_val, 4, light_weights_);
+  // } 
+  // else 
+  // {
+  //   params_color_.adjustWeightsWithLightVal(light_val, -1, light_weights_);
+  // }
 
-  params_color_.updateDistribution(light_range_, light_weights_);
+  // params_color_.updateDistribution(light_range_, light_weights_);
 
   double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
   double avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min ) / 2;
