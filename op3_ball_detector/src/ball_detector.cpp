@@ -163,7 +163,7 @@ void BallDetector::process()
     // was the detection valid?
     if (goodDetectionMode()) {
       std::cout << "Good detection mode for " << light_val << std::endl;
-      params_color_.updateDistribution(light_range_, light_weights_, light_val);
+      params_color_.adjustWeightsWithLightVal(light_val, 1, light_weights_);
     }
 
 //    // set input image

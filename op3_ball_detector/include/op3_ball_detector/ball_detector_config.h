@@ -123,7 +123,8 @@ class BallColorConfig
   
   int sampleLightVal();
   int getMedianRVal(int x_val);
-  int updateDistribution(std::vector<double> light_range, std::vector<double> range_weights, int light_val);
+  void updateDistribution(std::vector<double> light_range, std::vector<double> light_weights);
+  void adjustWeightsWithLightVal(int light_val, int adjust_val, std::vector<double> &light_weights);
 
   int x_min;
   int x_max;
