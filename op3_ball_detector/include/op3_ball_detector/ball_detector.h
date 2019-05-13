@@ -48,6 +48,9 @@
 #include "op3_ball_detector/SaveImage.h"
 #include "op3_ball_detector/SwitchDetection.h"
 
+#include <map>
+#include <deque>
+
 namespace robotis_op
 {
 
@@ -115,6 +118,11 @@ class BallDetector
   void houghDetection2(const cv::Mat &input_hough);
   void drawOutputImage();
 
+  //to test the distribution outputs
+  void testDistributionPercent(int light_val, int range, int x_min, int x_max);
+  std::deque<int> last_vals_;
+  std::map<int, int> counter_;
+
   //ros node handle
   ros::NodeHandle nh_;
 
@@ -155,7 +163,6 @@ class BallDetector
   int h_range_;
   int s_range_;
   int v_range_;
-  int num_call_;
 
   // web setting
   std::string default_setting_path_;

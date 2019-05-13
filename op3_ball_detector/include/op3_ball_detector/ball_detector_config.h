@@ -22,6 +22,8 @@
 #include <ctime>
 #include <stdlib.h>
 #include <vector>
+#include <random>
+
 
 namespace robotis_op
 {
@@ -50,6 +52,10 @@ const int X_MIN_DEFAULT = 0;
 const int X_MAX_DEFAULT = 4000;
 const double LIGHT_SLOPE_DEFAULT = 1;
 const double LIGHT_CONSTANT_DEFAULT = 0;
+const int NUM_INTERVALS = 10; // test at 10
+const double RANDOM_SAMPLE_CHANCE = 0.05;
+const int DETECTION_REWARD = 4;
+const int DETECTION_PENALTY = -1;
 
 class HsvFilter
 {
@@ -112,14 +118,7 @@ class DetectorConfig
 class BallColorConfig
 {
  public:
-  BallColorConfig()
-    : x_min(X_MIN_DEFAULT),
-      x_max(X_MAX_DEFAULT),
-      light_slope(LIGHT_SLOPE_DEFAULT),
-      light_constant(LIGHT_CONSTANT_DEFAULT)
-  {
-    srand(time(NULL));
-  }
+  BallColorConfig();
   
   int sampleLightVal();
   int getMedianRVal(int x_val);
@@ -130,6 +129,10 @@ class BallColorConfig
   int x_max;
   double light_slope;
   double light_constant;
+  double range;
+ private:
+  std::mt19937 gen;
+  std::piecewise_constant_distribution<> light_distribution;
 };
 
 }
