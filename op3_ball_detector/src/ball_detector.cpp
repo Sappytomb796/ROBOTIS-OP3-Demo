@@ -171,9 +171,9 @@ void BallDetector::process()
     // was the detection valid?
     if (goodDetectionMode()) {
       std::cout << "Good detection mode for " << light_val << std::endl;
-      params_color_.adjustWeightsWithLightVal(light_val, 4, light_weights_);
+      params_color_.adjustWeightsWithLightVal(light_val, DETECTION_REWARD, light_weights_);
     } else {
-      params_color_.adjustWeightsWithLightVal(light_val, -1, light_weights_);
+      params_color_.adjustWeightsWithLightVal(light_val, DETECTION_PENALTY, light_weights_);
     }
     params_color_.updateDistribution(light_range_, light_weights_);
 
@@ -504,11 +504,11 @@ int BallDetector::applyDetectionSettings()
   // Test range. To be replaced by Vision -- Create System for Determining When To Affect Weighted Sampling
   // if(light_val < 2600 && light_val > 2500)
   // {
-  //   params_color_.adjustWeightsWithLightVal(light_val, 4, light_weights_);
+  //   params_color_.adjustWeightsWithLightVal(light_val, DETECTION_REWARD, light_weights_);
   // } 
   // else 
   // {
-  //   params_color_.adjustWeightsWithLightVal(light_val, -1, light_weights_);
+  //   params_color_.adjustWeightsWithLightVal(light_val, DETECTION_PENALTY, light_weights_);
   // }
 
   // params_color_.updateDistribution(light_range_, light_weights_);

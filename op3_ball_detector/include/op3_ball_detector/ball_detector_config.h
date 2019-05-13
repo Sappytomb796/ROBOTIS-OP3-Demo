@@ -54,6 +54,8 @@ const double LIGHT_SLOPE_DEFAULT = 1;
 const double LIGHT_CONSTANT_DEFAULT = 0;
 const int NUM_INTERVALS = 10; // test at 10
 const double RANDOM_SAMPLE_CHANCE = 0.05;
+const int DETECTION_REWARD = 4;
+const int DETECTION_PENALTY = -1;
 
 class HsvFilter
 {
