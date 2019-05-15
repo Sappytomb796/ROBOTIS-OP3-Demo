@@ -42,6 +42,8 @@ namespace robotis_op{
 			ros::Subscriber op3_joints_sub_;
 			ros::Subscriber web_sub_;
 			ros::Subscriber button_sub_;	
+
+			ros::Publisher web_message_pub_;
 			ros::Publisher joint_state_pub_;
 			ros::Publisher module_pub_;	
 			

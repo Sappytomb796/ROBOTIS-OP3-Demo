@@ -14,12 +14,12 @@ namespace robotis_op
 		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
 										&MotionReplay::jointCallback, this);
 		button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
-		web_sub_ = nh_.subscribe("/robotis/replay", 1, &MotionReplay::webCallback, this);
-		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/set_joint_states", 0);
+		web_sub_ = nh_.subscribe("/robotis/replay/web", 1, &MotionReplay::webCallback, this);
+
+		web_message_pub_ = nh_.advertise<std_msgs::String>("/robotis/replay/status", 0);
+		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/direct_control/set_joint_states", 0);
 		module_pub_ = nh_.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 0);
-		
-		//joint_module_ = nh_.serviceClient<robotis_controller_msgs::SetModule>("/robotis/set_present_ctrl_modules");
-		
+				
 		joint_states_.clear();
 		
 		record_flag = false;
@@ -37,16 +37,6 @@ namespace robotis_op
 		msg.data = module_name;
 		
 		module_pub_.publish(msg);
-		
-		/*
-		robotis_controller_msgs::SetModule msg;
-		msg.request.module_name = module_name;
-		
-		if(!joint_module_.call(msg))
-		{
-			ROS_ERROR("module not set...\n");
-		}
-		*/
 	}
 	
 	void MotionReplay::jointCallback(const sensor_msgs::JointState::ConstPtr& msg)
@@ -130,8 +120,14 @@ namespace robotis_op
 	
 	void MotionReplay::publishJointStates()
 	{
+		std_msgs::String web_message;
+		std::string message;
+
 		if(joint_states_.size() == 0){
-			ROS_INFO("Error: No replay to publish...");
+			message = "Error: No replay to publish...";
+			web_message.data = message;
+			web_message_pub_.publish(web_message);
+			ROS_INFO("%s", message.c_str());
 			return;
 		}
 		
@@ -142,15 +138,21 @@ namespace robotis_op
 		{
 			 joint_state_pub_.publish(*it);
 			 loop_rate.sleep();
-       			 ROS_INFO("%f: \n", (*it).position[0]);
+       		 ROS_INFO("%f: \n", (*it).position[0]);
 		}
 	}
 	
 	bool MotionReplay::saveReplay(std::string replay_name)
 	{
+		std_msgs::String web_message;
+		std::string message;
+
 		if(joint_states_.size() == 0)
 		{
-			ROS_INFO("ERROR: no replay data to save...");
+			message = "ERROR: No replay data to save...";
+			web_message.data = message;
+			web_message_pub_.publish(web_message);
+			ROS_INFO("%s", message.c_str());
 			return false;
 		}
 		
@@ -160,7 +162,10 @@ namespace robotis_op
 		
 		if(!file.is_open())
 		{
-			ROS_INFO("ERROR: failed to open %s.txt", replay_name.c_str());
+			message = "ERROR: failed to open " + replay_name + ".txt";
+			web_message.data = message;
+			web_message_pub_.publish(web_message);
+			ROS_INFO("%s", message.c_str());
 			return false;
 		}
 		
@@ -175,18 +180,27 @@ namespace robotis_op
 		
 		file.close();
 		
-		ROS_INFO("%s.txt written.", replay_name.c_str());
+		message = replay_name + ".txt written.";
+		web_message.data = message;
+		web_message_pub_.publish(web_message);
+		ROS_INFO("%s", message.c_str());
 		return true;
 	}
 	
 	bool MotionReplay::loadReplay(std::string replay_name)
 	{
+		std_msgs::String web_message;
+		std::string message;
+
 		std::ifstream file;
 		file.open(replay_name);
 		
 		if(!file.is_open())
 		{
-			std::cout << "ERROR: failed to open " << replay_name << ".txt\n";
+			message = "ERROR: failed to open " + replay_name + ".txt";
+			web_message.data = message;
+			web_message_pub_.publish(web_message);
+			ROS_INFO("%s", message.c_str());
 			return false;
 		}
 		
@@ -213,18 +227,30 @@ namespace robotis_op
 		}
 		
 		file.close();
-		
+		message = replay_name + ".txt loaded.";
+		web_message.data = message;
+		web_message_pub_.publish(web_message);
+		ROS_INFO("%s", message.c_str());
 		return true;
 	}
 
 	void MotionReplay::deleteReplay(std::string file_name){
-		const char * file_path = file_name.c_str();
-		if(remove(file_path) != 0){
-			ROS_INFO("Removed %s.", file_path);
+		std::string file_path = file_name + ".txt";
+		std_msgs::String web_message;
+		std::string message;
+		
+		if(remove(file_path.c_str()) != 0){
+			message = "Removed " + file_path;
+			web_message.data = message;
+			web_message_pub_.publish(web_message);
+			ROS_INFO("%s", message.c_str());
 		}
-		else
-		{
-			ROS_INFO("Failed to remove %s.", file_path);
+
+		else{
+			message = "Failed to remove " + file_path;
+			web_message.data = message;
+			web_message_pub_.publish(web_message);
+			ROS_INFO("%s", message.c_str());
 		}
 	}
 }
