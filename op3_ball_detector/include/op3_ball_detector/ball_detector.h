@@ -20,6 +20,7 @@
 #define _BALL_DETECTOR_H_
 
 #include <string>
+#include <math.h>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -46,6 +47,9 @@
 
 #include "op3_ball_detector/SaveImage.h"
 #include "op3_ball_detector/SwitchDetection.h"
+
+#include <map>
+#include <deque>
 
 namespace robotis_op
 {
@@ -88,7 +92,12 @@ class BallDetector
   bool switchDetectionCallback(op3_ball_detector::SwitchDetection::Request &req, op3_ball_detector::SwitchDetection::Response &res);
 
   bool loadDetectionSettings();
-  void applyDetectionSettings(); // types TBD
+  int applyDetectionSettings();
+  void updateHSV(int h, int s, int v);
+  void convertHSVtoRGB(double h, double s, double v, int &rOut, int &gOut, int &bOut);
+  void convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, int &vOut);
+
+  bool goodDetectionMode();
 
   void resetParameter();
   void publishParam();
@@ -108,6 +117,11 @@ class BallDetector
   void houghDetection(const unsigned int imgEncoding);
   void houghDetection2(const cv::Mat &input_hough);
   void drawOutputImage();
+
+  //to test the distribution outputs
+  void testDistributionPercent(int light_val, int range, int x_min, int x_max);
+  std::deque<int> last_vals_;
+  std::map<int, int> counter_;
 
   //ros node handle
   ros::NodeHandle nh_;
@@ -143,6 +157,12 @@ class BallDetector
   BallColorConfig params_color_;
   std::string color_config_path_;
   bool has_color_config_;
+  std::vector<double> light_range_;
+  std::vector<double> light_weights_;
+
+  int h_range_;
+  int s_range_;
+  int v_range_;
 
   // web setting
   std::string default_setting_path_;

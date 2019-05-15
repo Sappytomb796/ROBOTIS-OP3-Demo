@@ -19,6 +19,12 @@
 #ifndef _DETECTOR_CONFIG_H_
 #define _DETECTOR_CONFIG_H_
 
+#include <ctime>
+#include <stdlib.h>
+#include <vector>
+#include <random>
+
+
 namespace robotis_op
 {
 
@@ -42,6 +48,14 @@ const int FILTER_S_MAX_DEFAULT = 255;
 const int FILTER_V_MIN_DEFAULT = 0;
 const int FILTER_V_MAX_DEFAULT = 255;
 const int ELLIPSE_SIZE = 5;
+const int X_MIN_DEFAULT = 0;
+const int X_MAX_DEFAULT = 4000;
+const double LIGHT_SLOPE_DEFAULT = 1;
+const double LIGHT_CONSTANT_DEFAULT = 0;
+const int NUM_INTERVALS = 10; // test at 10
+const double RANDOM_SAMPLE_CHANCE = 0.05;
+const int DETECTION_REWARD = 4;
+const int DETECTION_PENALTY = -1;
 
 class HsvFilter
 {
@@ -104,8 +118,21 @@ class DetectorConfig
 class BallColorConfig
 {
  public:
-  std::string name;
-  int test_val; 
+  BallColorConfig();
+  
+  int sampleLightVal();
+  int getMedianRVal(int x_val);
+  void updateDistribution(std::vector<double> light_range, std::vector<double> light_weights);
+  void adjustWeightsWithLightVal(int light_val, int adjust_val, std::vector<double> &light_weights);
+
+  int x_min;
+  int x_max;
+  double light_slope;
+  double light_constant;
+  double range;
+ private:
+  std::mt19937 gen;
+  std::piecewise_constant_distribution<> light_distribution;
 };
 
 }

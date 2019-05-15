@@ -4,6 +4,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(op3_ball_detector)
 
+add_compile_options(-std=c++11)
+
 ################################################################################
 # Find catkin packages and libraries for catkin and system dependencies
 ################################################################################
@@ -107,6 +109,7 @@ include_directories(
 
 add_executable(ball_detector_node
   src/ball_detector.cpp
+  src/ball_detector_config.cpp
   src/ball_detector_node.cpp
 )
 
