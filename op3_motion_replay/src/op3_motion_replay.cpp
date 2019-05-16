@@ -193,7 +193,7 @@ namespace robotis_op
 		std::string message;
 
 		std::ifstream file;
-		file.open(replay_name);
+		file.open(replay_name + ".txt");
 		
 		if(!file.is_open())
 		{
