@@ -55,11 +55,11 @@ void BallColorConfig::updateDistribution(std::vector<double> light_range, std::v
     light_distribution.param(std::piecewise_constant_distribution<>::param_type(light_range.begin(), light_range.end(), light_weights.begin()));
 }
 
-void BallColorConfig::adjustWeightsWithLightVal(int light_val, bool reward, std::vector<double> &light_weights)
+void BallColorConfig::adjustWeightsWithLightVal(int light_val, bool is_reward, std::vector<double> &light_weights)
 {
     int adjust_val = 0;
     int interval_val = light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))];
-    if (reward) { // increment
+    if (is_reward) { // increment
         int diff_from_threshold = std::max(LOG_RANGE_THRESHOLD - interval_val, 1);
         adjust_val = int(floor(std::max(DETECTION_REWARD_SCALAR * log(diff_from_threshold) / log(LOG_REWARD_BASE), 1.0)));
     }
