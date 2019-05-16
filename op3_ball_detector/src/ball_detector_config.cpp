@@ -40,7 +40,7 @@ int BallColorConfig::sampleLightVal()
     if((rand() % 100) <= (RANDOM_SAMPLE_CHANCE * 100))
     {
         std::cout << "BOO!" << std::endl;
-        return rand() % x_max + x_min;
+        return rand() % range + x_min;
     }
     return light_distribution(gen);
 }

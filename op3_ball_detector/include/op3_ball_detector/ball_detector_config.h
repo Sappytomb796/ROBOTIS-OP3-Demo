@@ -52,7 +52,7 @@ const int X_MIN_DEFAULT = 0;
 const int X_MAX_DEFAULT = 4000;
 const double LIGHT_SLOPE_DEFAULT = 1;
 const double LIGHT_CONSTANT_DEFAULT = 0;
-const int NUM_INTERVALS = 10; // test at 10
+const int NUM_INTERVALS = 20; // test at 10
 const double RANDOM_SAMPLE_CHANCE = 0.05;
 const int DETECTION_REWARD = 4;
 const int DETECTION_PENALTY = -1;
@@ -129,7 +129,7 @@ class BallColorConfig
   int x_max;
   double light_slope;
   double light_constant;
-  double range;
+  int range;
  private:
   std::mt19937 gen;
   std::piecewise_constant_distribution<> light_distribution;
