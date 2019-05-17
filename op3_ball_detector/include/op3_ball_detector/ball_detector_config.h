@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <random>
+#include <math.h>
 
 
 namespace robotis_op
@@ -52,10 +53,13 @@ const int X_MIN_DEFAULT = 0;
 const int X_MAX_DEFAULT = 4000;
 const double LIGHT_SLOPE_DEFAULT = 1;
 const double LIGHT_CONSTANT_DEFAULT = 0;
-const int NUM_INTERVALS = 10; // test at 10
+const int NUM_INTERVALS = 20; // test at 10
 const double RANDOM_SAMPLE_CHANCE = 0.05;
-const int DETECTION_REWARD = 4;
-const int DETECTION_PENALTY = -1;
+const double DETECTION_REWARD_SCALAR = 4.0;
+const double DETECTION_PENALTY_SCALAR = -4.0;
+const int LOG_RANGE_THRESHOLD = 2500;
+const double LOG_REWARD_BASE = 2.0;
+const double LOG_PENALTY_BASE = 2.0;
 
 class HsvFilter
 {
@@ -123,7 +127,7 @@ class BallColorConfig
   int sampleLightVal();
   int getMedianRVal(int x_val);
   void updateDistribution(std::vector<double> light_range, std::vector<double> light_weights);
-  void adjustWeightsWithLightVal(int light_val, int adjust_val, std::vector<double> &light_weights);
+  void adjustWeightsWithLightVal(int light_val, bool is_reward, std::vector<double> &light_weights);
 
   int x_min;
   int x_max;
