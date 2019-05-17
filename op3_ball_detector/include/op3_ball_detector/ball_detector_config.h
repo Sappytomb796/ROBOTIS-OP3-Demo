@@ -133,7 +133,7 @@ class BallColorConfig
   int x_max;
   double light_slope;
   double light_constant;
-  double range;
+  int range;
  private:
   std::mt19937 gen;
   std::piecewise_constant_distribution<> light_distribution;

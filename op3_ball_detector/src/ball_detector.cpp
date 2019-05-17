@@ -114,7 +114,6 @@ BallDetector::BallDetector()
   params_config_ = detect_config;
   init_param_ = true;
   printConfig();
-  loadDetectionSettings();
   process();
 }
 
@@ -168,14 +167,16 @@ void BallDetector::process()
     //detect circles
     houghDetection2(img_filtered);
   
-    // was the detection valid?
-    if (goodDetectionMode()) {
-      std::cout << "Good detection mode for " << light_val << std::endl;
-      params_color_.adjustWeightsWithLightVal(light_val, true, light_weights_);
-    } else {
-      params_color_.adjustWeightsWithLightVal(light_val, false, light_weights_);
+    if(switch_detection_flag_ == true){
+      // was the detection valid?
+      if (goodDetectionMode()) {
+        std::cout << "Good detection mode for " << light_val << std::endl;
+        params_color_.adjustWeightsWithLightVal(light_val, DETECTION_REWARD, light_weights_);
+      } else {
+        params_color_.adjustWeightsWithLightVal(light_val, DETECTION_PENALTY, light_weights_);
+      }
+      params_color_.updateDistribution(light_range_, light_weights_);
     }
-    params_color_.updateDistribution(light_range_, light_weights_);
 
 //    // set input image
 //    setInputImage(cv_img_ptr_sub_->image);
@@ -438,6 +439,7 @@ bool BallDetector::loadDetectionSettings()
 
     params_color_.range = params_color_.x_max - params_color_.x_min;
     double subrange = params_color_.range / NUM_INTERVALS;
+    light_range_.clear();
     for(double i = params_color_.x_min; i < params_color_.x_max; i+=subrange)
     {
       light_range_.push_back(i);
@@ -502,7 +504,7 @@ int BallDetector::applyDetectionSettings()
   testDistributionPercent(light_val, 50, 2500, 2600);
 
   // Test range. To be replaced by Vision -- Create System for Determining When To Affect Weighted Sampling
-  // if(light_val < 2600 && light_val > 2500)
+  // if(light_val < 4600 && light_val > 2500)
   // {
   //   params_color_.adjustWeightsWithLightVal(light_val, DETECTION_REWARD, light_weights_);
   // } 
