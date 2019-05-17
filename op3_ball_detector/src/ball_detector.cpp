@@ -171,9 +171,9 @@ void BallDetector::process()
       // was the detection valid?
       if (goodDetectionMode()) {
         std::cout << "Good detection mode for " << light_val << std::endl;
-        params_color_.adjustWeightsWithLightVal(light_val, DETECTION_REWARD, light_weights_);
+        params_color_.adjustWeightsWithLightVal(light_val, true, light_weights_);
       } else {
-        params_color_.adjustWeightsWithLightVal(light_val, DETECTION_PENALTY, light_weights_);
+        params_color_.adjustWeightsWithLightVal(light_val, false, light_weights_);
       }
       params_color_.updateDistribution(light_range_, light_weights_);
     }
