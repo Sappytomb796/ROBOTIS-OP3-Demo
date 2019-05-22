@@ -41,7 +41,6 @@ namespace robotis_op{
 			
 			ros::Subscriber op3_joints_sub_;
 			ros::Subscriber web_sub_;
-			ros::Subscriber button_sub_;	
 
 			ros::Publisher web_message_pub_;
 			ros::Publisher joint_state_pub_;
@@ -50,11 +49,8 @@ namespace robotis_op{
 			ros::ServiceClient joint_module_;
 			
 			std::vector<sensor_msgs::JointState> joint_states_;
-
-			bool record_flag;
 			std::map<std::string, double> joint_angles_;
+			bool record_flag;
 	};
-
 }
-
 #endif

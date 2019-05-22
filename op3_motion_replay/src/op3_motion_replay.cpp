@@ -13,7 +13,6 @@ namespace robotis_op
 	{
 		op3_joints_sub_ = nh_.subscribe("/robotis/present_joint_states", 1,
 										&MotionReplay::jointCallback, this);
-		button_sub_ = nh_.subscribe("/robotis/open_cr/button", 1, &MotionReplay::buttonCallback, this);
 		web_sub_ = nh_.subscribe("/robotis/replay/web", 1, &MotionReplay::webCallback, this);
 
 		web_message_pub_ = nh_.advertise<std_msgs::String>("/robotis/replay/status", 0);
@@ -21,9 +20,8 @@ namespace robotis_op
 		module_pub_ = nh_.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 0);
 				
 		joint_states_.clear();
-		
+	 	joint_angles_.clear();	
 		record_flag = false;
-		joint_angles_.clear();
 	}
 
 	MotionReplay::~MotionReplay()
@@ -35,7 +33,6 @@ namespace robotis_op
 	{
 		std_msgs::String msg;
 		msg.data = module_name;
-		
 		module_pub_.publish(msg);
 	}
 	
@@ -58,30 +55,11 @@ namespace robotis_op
 			new_msg.velocity.push_back(msg->velocity[i]);
 			new_msg.effort.push_back(msg->effort[i]);
 			
-			// print for testing
-			// might need to convert position (pos * 180 / M_PI)
 			ROS_INFO("%s\nposition: %f\nvelocity: %f\neffort: %f\n",
 					 msg->name[i].c_str(), msg->position[i], msg->velocity[i], msg->effort[i]);
 		}
 		
 		joint_states_.push_back(new_msg);
-	}
-
-	void MotionReplay::buttonCallback(const std_msgs::String::ConstPtr& msg){
-		if(msg->data == "start"){
-			record_flag = !record_flag;
-			ROS_INFO("Button: start");
-		}
-
-		if(msg->data == "user"){
-			saveReplay("test");
-			ROS_INFO("Button: save");
-		}
-		if(msg->data == "mode"){
-			enableModule("direct_control_module");	// notifies framework to activate direct_control_module
-			publishJointStates();
-			ROS_INFO("Button: replay");
-		}
 	}
 
 	void MotionReplay::webCallback(const std_msgs::MultiArrayDimension::ConstPtr& msg){
@@ -107,7 +85,7 @@ namespace robotis_op
 				break;
 
 			case REPLAY_PLAY:
-				enableModule("direct_control_module"); // notifies framework to activate direct_control_module
+				enableModule("direct_control_module"); 
 				publishJointStates();
 				ROS_INFO("Button: replay");
 				break;
