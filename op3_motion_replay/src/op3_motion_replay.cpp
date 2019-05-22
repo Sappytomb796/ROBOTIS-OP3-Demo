@@ -239,7 +239,7 @@ namespace robotis_op
 		std_msgs::String web_message;
 		std::string message;
 		
-		if(remove(file_path.c_str()) != 0){
+		if(remove(file_path.c_str()) == 0){
 			message = "Removed " + file_path;
 			web_message.data = message;
 			web_message_pub_.publish(web_message);
