@@ -177,15 +177,6 @@ void BallDetector::process()
       }
       params_color_.updateDistribution(light_range_, light_weights_);
     }
-
-//    // set input image
-//    setInputImage(cv_img_ptr_sub_->image);
-
-//    // image filtering
-//    filterImage();
-
-//    //detect circles
-//    houghDetection(this->img_encoding_);
   }
 }
 
@@ -230,9 +221,9 @@ void BallDetector::publishCircles()
   //fill header
   circles_msg_.header.seq++;
   circles_msg_.header.stamp = sub_time_;
-  circles_msg_.header.frame_id = "detector";  //To do: get frame_id from input image
+  circles_msg_.header.frame_id = "detector";
 
-  //fill circle data
+  // fill circle data
   // top(-1), bottom(+1)
   // left(-1), right(+1)
   for (int idx = 0; idx < circles_.size(); idx++)
@@ -501,20 +492,6 @@ int BallDetector::applyDetectionSettings()
   g = 0;
   b = 0;
 
-  testDistributionPercent(light_val, 50, 2500, 2600);
-
-  // Test range. To be replaced by Vision -- Create System for Determining When To Affect Weighted Sampling
-  // if(light_val < 4600 && light_val > 2500)
-  // {
-  //   params_color_.adjustWeightsWithLightVal(light_val, DETECTION_REWARD, light_weights_);
-  // } 
-  // else 
-  // {
-  //   params_color_.adjustWeightsWithLightVal(light_val, DETECTION_PENALTY, light_weights_);
-  // }
-
-  // params_color_.updateDistribution(light_range_, light_weights_);
-
   double avgH = (params_config_.filter_threshold.h_min - params_config_.filter_threshold.h_max ) / 2;
   double avgS = (params_config_.filter_threshold.s_max - params_config_.filter_threshold.s_min ) / 2;
   double avgV = (params_config_.filter_threshold.v_max - params_config_.filter_threshold.v_min ) / 2;
@@ -617,7 +594,6 @@ void BallDetector::convertRGBtoHSV(int r, int g, int b, int &hOut, int &sOut, in
 
 bool BallDetector::goodDetectionMode()
 {
-  std::cout << "NUMBER OF CIRCLES: " << circles_.size() << std::endl;
   if (circles_.size() > 1) 
     return false; // If there is more than one circle, this can't be a good detection mode
   else if (circles_.empty())    
@@ -1056,11 +1032,6 @@ void BallDetector::houghDetection2(const cv::Mat &input_hough)
   //clear previous circles
   circles_.clear();
 
-  // If input image is RGB, convert it to gray
-//  if (imgEncoding == IMG_RGB8)
-//    cv::cvtColor(input_hough, gray_image, CV_RGB2GRAY);
-
-
   //Reduce the noise so we avoid false circle detection
   cv::GaussianBlur(input_hough, input_hough,
                    cv::Size(params_config_.gaussian_blur_size, params_config_.gaussian_blur_size),
@@ -1114,10 +1085,6 @@ void BallDetector::drawOutputImage()
   cv::Point center_position;
   int radius = 0;
   size_t ii;
-
-  //draws results to output Image
-//  if (params_config_.debug == true)
-//    out_image_ = in_image_.clone();
 
   for (ii = 0; ii < circles_.size(); ii++)
   {
