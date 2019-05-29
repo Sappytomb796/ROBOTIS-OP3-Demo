@@ -95,7 +95,7 @@ class DetectorConfig
   int max_radius;                 // maximum circle radius allowed
   HsvFilter filter_threshold;     // filter threshold
   bool use_second_filter;
-  HsvFilter filter2_threshold;     // filter threshold
+  HsvFilter filter2_threshold;    // filter threshold
   int ellipse_size;
   bool debug;                     // to debug log
 

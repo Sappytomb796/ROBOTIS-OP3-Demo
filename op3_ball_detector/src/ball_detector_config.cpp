@@ -39,7 +39,6 @@ int BallColorConfig::sampleLightVal()
     // to avoid getting stuck in maximum
     if((rand() % 100) <= (RANDOM_SAMPLE_CHANCE * 100))
     {
-        std::cout << "BOO!" << std::endl;
         return rand() % range + x_min;
     }
     return light_distribution(gen);
@@ -66,10 +65,7 @@ void BallColorConfig::adjustWeightsWithLightVal(int light_val, bool is_reward, s
     else { // decrement
         adjust_val = int(floor(std::min(DETECTION_PENALTY_SCALAR * log(interval_val) / log(LOG_PENALTY_BASE), -1.0)));
     }
-    std::cout << "ADJUST VAL: " << adjust_val << std::endl;
 
-
-    std::cout << "LIGHT VAL: " << light_val << std::endl;
     if(light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))] + adjust_val > 0)
         light_weights[int((light_val - x_min) / (range / NUM_INTERVALS))] += adjust_val;
     else
