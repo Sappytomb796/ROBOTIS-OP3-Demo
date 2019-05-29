@@ -1025,7 +1025,6 @@ void BallDetector::houghDetection(const unsigned int imgEncoding)
 
 void BallDetector::houghDetection2(const cv::Mat &input_hough)
 {
-//  cv::Mat gray_image;
   std::vector<cv::Vec3f> circles_current;
   std::vector<cv::Vec3f> prev_circles = circles_;
 
