@@ -1,6 +1,8 @@
 #include <ros/ros.h>
 #include "op3_motion_replay/op3_motion_replay.h"
 
+bool isManagerRunning();
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "op3_motion_replay_node");
