@@ -16,11 +16,10 @@ namespace robotis_op
 		web_sub_ = nh_.subscribe("/robotis/replay/web", 1, &MotionReplay::webCallback, this);
 
 		web_message_pub_ = nh_.advertise<std_msgs::String>("/robotis/replay/status", 0);
-		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/direct_control/set_joint_states", 0);
+		joint_state_pub_ = nh_.advertise<sensor_msgs::JointState>("/robotis/set_joint_states", 0);
 		module_pub_ = nh_.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 0);
 
-		joint_states_.clear();
-		joint_angles_.clear();	
+		joint_states_.clear();	
 		record_flag = false;
 	}
 
@@ -48,6 +47,8 @@ namespace robotis_op
 
 		sensor_msgs::JointState new_msg;
 
+		new_msg.header = msg->header;
+
 		for(int i = 0; i < num_states; i++)
 		{
 			new_msg.name.push_back(msg->name[i]);
@@ -55,8 +56,8 @@ namespace robotis_op
 			new_msg.velocity.push_back(msg->velocity[i]);
 			new_msg.effort.push_back(msg->effort[i]);
 
-			ROS_INFO("%s\nposition: %f\nvelocity: %f\neffort: %f\n",
-					msg->name[i].c_str(), msg->position[i], msg->velocity[i], msg->effort[i]);
+			ROS_INFO("%s\nframe_id: %s\nposition: %f\nvelocity: %f\neffort: %f\n",
+					msg->header.frame_id.c_str(), msg->name[i].c_str(), msg->position[i], msg->velocity[i], msg->effort[i]);
 		}
 
 		joint_states_.push_back(new_msg);
@@ -88,7 +89,7 @@ namespace robotis_op
 				break;
 
 			case REPLAY_PLAY:
-				enableModule("direct_control_module"); 
+				enableModule("none"); 
 				publishJointStates();
 				ROS_INFO("Button: replay");
 				break;
@@ -112,7 +113,7 @@ namespace robotis_op
 			return;
 		}
 
-		ros::Rate loop_rate(15);
+		ros::Rate loop_rate(30);
 
 		for (std::vector<sensor_msgs::JointState>::const_iterator it = joint_states_.begin();
 				it != joint_states_.end(); ++it)
@@ -163,12 +164,6 @@ namespace robotis_op
 			}
 
 			file << '\n';
-			/*
-			   for (std::vector<double>::const_iterator pit = (*it).position.begin();
-			   pit != (*it).position.end(); ++pit)
-			   file << *pit << '\t';
-			   file << '\n';
-			 */
 		}
 
 		file.close();
