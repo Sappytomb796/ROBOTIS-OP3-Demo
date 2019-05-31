@@ -49,7 +49,6 @@ namespace robotis_op{
 			ros::ServiceClient joint_module_;
 			
 			std::vector<sensor_msgs::JointState> joint_states_;
-			std::map<std::string, double> joint_angles_;
 			bool record_flag;
 	};
 }
