@@ -140,11 +140,11 @@ namespace robotis_op
 
 		ROS_INFO("Current path is %s", get_current_dir_name());
 		std::ofstream file;
-		file.open(replay_name + ".txt");
+		file.open(replay_name + ".mrf");
 
 		if(!file.is_open())
 		{
-			message = "ERROR: failed to open " + replay_name + ".txt";
+			message = "ERROR: failed to open " + replay_name + ".mrf";
 			web_message.data = message;
 			web_message_pub_.publish(web_message);
 			ROS_INFO("%s", message.c_str());
@@ -168,7 +168,7 @@ namespace robotis_op
 
 		file.close();
 
-		message = replay_name + ".txt written.";
+		message = replay_name + ".mrf written.";
 		web_message.data = message;
 		web_message_pub_.publish(web_message);
 		ROS_INFO("%s", message.c_str());
@@ -181,11 +181,11 @@ namespace robotis_op
 		std::string message;
 
 		std::ifstream file;
-		file.open(replay_name + ".txt");
+		file.open(replay_name + ".mrf");
 
 		if(!file.is_open())
 		{
-			message = "ERROR: failed to open " + replay_name + ".txt";
+			message = "ERROR: failed to open " + replay_name + ".mrf";
 			web_message.data = message;
 			web_message_pub_.publish(web_message);
 			ROS_INFO("%s", message.c_str());
@@ -230,7 +230,7 @@ namespace robotis_op
 		}
 
 		file.close();
-		message = replay_name + ".txt loaded.";
+		message = replay_name + ".mrf loaded.";
 		web_message.data = message;
 		web_message_pub_.publish(web_message);
 		ROS_INFO("%s", message.c_str());
@@ -238,7 +238,7 @@ namespace robotis_op
 	}
 
 	void MotionReplay::deleteReplay(std::string file_name){
-		std::string file_path = file_name + ".txt";
+		std::string file_path = file_name + ".mrf";
 		std_msgs::String web_message;
 		std::string message;
 
